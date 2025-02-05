@@ -1,146 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Home</title>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet" />
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
-    <style>
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-        }
-
-        #map {
-            width: 100%;
-            height: 100vh;
-            position: relative;
-        }
-
-        .search-container {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 10px;
-            border-radius: 5px;
-            z-index: 1;
-        }
-
-        .search-container input {
-            width: 300px;
-        }
-
-        .menu-container {
-            position: absolute;
-            top: 70px; /* Adjust this value as needed */
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
-            z-index: 1;
-        }
-
-        .menu-item {
-            position: relative;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .menu-item:hover .dropdown-menu {
-            display: block;
-        }
-
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            padding: 10px;
-            z-index: 2;
-        }
-
-        .dropdown-menu label {
-            display: flex;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-
-        .dropdown-menu input[type="checkbox"] {
-            margin-right: 5px;
-        }
-    </style>
-    <link href="assets/plugins/custom/prismjs/prismjs.bundle.css" rel="stylesheet" type="text/css">
-    <link href="assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css">
-    <link href="assets/css/style.bundle.css" rel="stylesheet" type="text/css">
+    <link href="custom.css" rel="stylesheet" /></link>
 </head>
 
 <body>
     <div id="map">
         <div class="search-container">
-            <span class="svg-icon svg-icon-3 svg-icon-gray-500 position-absolute top-50 translate-middle ms-6">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <div class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
                     <rect opacity="0.5" x="17.0365" y="15.1223" width="8.15546" height="2" rx="1"
                         transform="rotate(45 17.0365 15.1223)" fill="black" />
                     <path
                         d="M11 19C6.55556 19 3 15.4444 3 11C3 6.55556 6.55556 3 11 3C15.4444 3 19 6.55556 19 11C19 15.4444 15.4444 19 11 19ZM11 5C7.53333 5 5 7.53333 5 11C5 14.4667 7.53333 17 11 17C14.4667 17 17 14.4667 17 11C17 7.53333 14.4667 5 11 5Z"
                         fill="black" />
                 </svg>
-            </span>
-            <input type="text" class="form-control form-control-solid ps-10" name="search" value=""
-                placeholder="Search" />
-            <select class="form-select ms-3" data-control="select" data-placeholder="Select an option">
-                <option></option>
-                <option value="1">Option 1</option>
-                <option value="2">Option 2</option>
+            </div>
+            <input type="text" placeholder="Search...">
+            <select>
+                <option value="state">State</option>
+                <option value="metro">Metro</option>
+                <option value="county">County</option>
+                <option value="zip-code">Zip Code</option>
             </select>
         </div>
         <div class="menu-container">
-            <div class="menu-item">
-                A
-                <div class="dropdown-menu">
-                    <label><input type="checkbox" /> Option 1</label>
-                    <label><input type="checkbox" /> Option 2</label>
-                    <label><input type="checkbox" /> Option 3</label>
+            <div class="my-menu-item">
+                Investor Trends
+                <div class="my-dropdown-menu">
+                    <label><input type="checkbox" /><span></span> Rental Rate</label>
+                    <label><input type="checkbox" /><span></span> Rent for Houses</label>
+                    <label><input type="checkbox" /><span></span> Cap Rate</label>
+                    <label><input type="checkbox" /><span></span> Vacancy Rate</label>
+                    <label><input type="checkbox" /><span></span> Rent as % of Income</label>
+                    <label><input type="checkbox" /><span></span> Shadow Inventory %</label>
+                    <label><input type="checkbox" /><span></span> Rent Growth</label>
+                    <label><input type="checkbox" /><span></span> Fair Market Rents (Section 8)</label>
+                    <label><input type="checkbox" /><span></span> Historical Bond Market Options for 1 yr through 30
+                        yr</label>
+                    <label><input type="checkbox" /><span></span> School Rank</label>
+                    <label><input type="checkbox" /><span></span> Military %</label>
                 </div>
             </div>
-            <div class="menu-item">
-                B
-                <div class="dropdown-menu">
-                    <label><input type="checkbox" /> Option 1</label>
-                    <label><input type="checkbox" /> Option 2</label>
-                    <label><input type="checkbox" /> Option 3</label>
+            <div class="my-menu-item">
+                Demographics
+                <div class="my-dropdown-menu">
+                    <label><input type="checkbox" /><span></span> Population</label>
+                    <label><input type="checkbox" /><span></span> Rent as % of Income</label>
+                    <label><input type="checkbox" /><span></span> Population Growth</label>
+                    <label><input type="checkbox" /><span></span> Income Growth</label>
+                    <label><input type="checkbox" /><span></span> Homeownership Rate</label>
+                    <label><input type="checkbox" /><span></span> Mortgaged Home %</label>
+                    <label><input type="checkbox" /><span></span> Median Age</label>
+                    <label><input type="checkbox" /><span></span> Poverty Rate</label>
+                    <label><input type="checkbox" /><span></span> Housing Units</label>
+                    <label><input type="checkbox" /><span></span> Housing Unit Growth Rate</label>
                 </div>
             </div>
-            <div class="menu-item">
-                C
-                <div class="dropdown-menu">
-                    <label><input type="checkbox" /> Option 1</label>
-                    <label><input type="checkbox" /> Option 2</label>
-                    <label><input type="checkbox" /> Option 3</label>
+            <div class="my-menu-item">
+                Affordability
+                <div class="my-dropdown-menu">
+                    <label><input type="checkbox" /><span></span> Home Value</label>
+                    <label><input type="checkbox" /><span></span> Home Value Growth (YOY)</label>
+                    <label><input type="checkbox" /><span></span> Overvalued %</label>
+                    <label><input type="checkbox" /><span></span> Value/Income Ratio</label>
+                    <label><input type="checkbox" /><span></span> Mortgage Payment</label>
+                    <label><input type="checkbox" /><span></span> Salary to Afford a House</label>
+                    <label><input type="checkbox" /><span></span> Mtg Payment as % of income</label>
+                    <label><input type="checkbox" /><span></span> Property Tax Rate</label>
+                    <label><input type="checkbox" /><span></span> Buy v Rent Differential</label>
                 </div>
             </div>
-            <div class="menu-item">
-                D
-                <div class="dropdown-menu">
-                    <label><input type="checkbox" /> Option 1</label>
-                    <label><input type="checkbox" /> Option 2</label>
-                    <label><input type="checkbox" /> Option 3</label>
+            <div class="my-menu-item">
+                Market Trends
+                <div class="my-dropdown-menu">
+                    <label><input type="checkbox" /><span></span> For Sale Inventory</label>
+                    <label><input type="checkbox" /><span></span> Sale Inventory growth2</label>
+                    <label><input type="checkbox" /><span></span> Inventory Surplus/Deficit</label>
+                    <label><input type="checkbox" /><span></span> Price Cut %</label>
+                    <label><input type="checkbox" /><span></span> Days on Market</label>
+                    <label><input type="checkbox" /><span></span> Inventory as % of Houses</label>
+                    <label><input type="checkbox" /><span></span> Median Listing Price</label>
+                    <label><input type="checkbox" /><span></span> New Llisting Count</label>
                 </div>
+            </div>
+        </div>
+    </div>
+    <div id="dashboardModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div class="dashboard">
+                <div class="card">
+                    <h3>MEDIAN PRICE</h3>
+                    <div class="value">$480k</div>
+                    <div class="change">1% MoM ▲</div>
+                </div>
+
+                <div class="card">
+                    <h3>MEDIAN DOM</h3>
+                    <div class="value">49 days</div>
+                    <div class="change">3 Days MoM ▲</div>
+                </div>
+
+                <div class="card">
+                    <h3>SALE TO LIST</h3>
+                    <div class="value">98%</div>
+                    <div class="change negative">0% MoM ▼</div>
+                </div>
+                <div class="card">
+                    <h3>MEDIAN PRICE</h3>
+                    <div class="value">$480k</div>
+                    <div class="change">1% MoM ▲</div>
+                </div>
+
+                <div class="card">
+                    <h3>MEDIAN DOM</h3>
+                    <div class="value">49 days</div>
+                    <div class="change">3 Days MoM ▲</div>
+                </div>
+
+                <div class="card">
+                    <h3>SALE TO LIST</h3>
+                    <div class="value">98%</div>
+                    <div class="change negative">0% MoM ▼</div>
+                </div>
+
             </div>
         </div>
     </div>
 </body>
 <script>
+    function openModal() {
+        document.getElementById("dashboardModal").style.display = "flex";
+    }
+
+    function closeModal() {
+        document.getElementById("dashboardModal").style.display = "none";
+    }
+
+    // Close modal if clicking outside the content
+    window.onclick = function (event) {
+        let modal = document.getElementById("dashboardModal");
+        if (event.target === modal) {
+            modal.style.display = "none";
+        }
+    }
+
     mapboxgl.accessToken = 'pk.eyJ1IjoiZ2ljb2RlcmdhbCIsImEiOiJjazcxODNscXYwM3R3M2V0aGcwMWxvcWV0In0.s246-Q7mSmCOOeqwP-HGtA';
 
     const map = new mapboxgl.Map({
@@ -155,15 +165,13 @@
     const statesBoundariesUrl = 'https://raw.githubusercontent.com/jgoodall/us-maps/master/geojson/state.geo.json';
     const countiesBoundariesUrl = 'https://raw.githubusercontent.com/joelwolfgang/GEOJson-US-Counties/master/usCounties.geojson';
     const zipcodeUrl = 'https://raw.githubusercontent.com/talentdev0314/zip-code/main/zips-by_county.json';
-    const zwsid = 'X1-ZWz1hj5qt65bt7_2kpit';
-    const zillowApiUrl = `https://web.zillow.com/webservice/GetDeepSearchResults.htm?zws-id=${zwsid}&`;
+
 
     let currentPopup = null;
     let highlightedCityId = null;
 
-    map.on('click', function (e) {
 
-    });
+
     map.on('load', () => {
         map.addSource('city-borders', {
             type: 'geojson',
@@ -235,12 +243,26 @@
             }
             highlightedCityId = null;
         });
+        map.on('click', 'city-borders-layer', async function (e) {
+            if (!e.features || e.features.length === 0) {
+                return;
+            }
+            console.log(e.features[0])
+
+            const cityName = e.features[0].properties.COUNTY_STATE_NAME;
+            const fipsCode = e.features[0].properties.FIPS_CODE;
+            const year = 2023;
+            const stateCode = fipsCode.split('-')[0];
+            const countyCode = fipsCode.split('-')[1];
+
+            const population = await fetchPopulationDataByYearState(year, stateCode);
+            openModal(cityName, fipsCode, population);
+            console.log('Population Data:', population);
+
+        });
     });
 
 </script>
-<script src="assets/plugins/global/plugins.bundle.js"></script>
-<script src="assets/js/scripts.bundle.js"></script>
-<script src="assets/plugins/custom/prismjs/prismjs.bundle.js"></script>
-<script src="assets/js/custom/documentation/forms/select2.js"></script>
+<script src="custom.js"></script>
 
 </html>
