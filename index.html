@@ -6,7 +6,14 @@
     <title>Home</title>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet" />
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
-    <link href="custom.css" rel="stylesheet" /></link>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
+    <link href="custom.css" rel="stylesheet" />
+    </link>
 </head>
 
 <body>
@@ -28,241 +35,144 @@
                 <option value="county">County</option>
                 <option value="zip-code">Zip Code</option>
             </select>
+            <div class="share-icon" onclick="openShareModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                    <path
+                        d="M18 16.08c-.76 0-1.44.3-1.96.77l-5.17-3.11c.05-.23.08-.46.08-.7s-.03-.47-.08-.7l5.12-3.08c.54.5 1.25.82 2.01.82 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.03.47.08.7l-5.12 3.08c-.54-.5-1.25-.82-2.01-.82-1.66 0-3 1.34-3 3s1.34 3 3 3c.76 0 1.47-.32 2.01-.82l5.12 3.08c-.05.23-.08.46-.08.7 0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3z" />
+                </svg>
+            </div>
         </div>
         <div class="menu-container">
             <div class="my-menu-item">
                 Investor Trends
-                <div class="my-dropdown-menu">
-                    <label><input type="checkbox" /><span></span> Rental Rate</label>
-                    <label><input type="checkbox" /><span></span> Rent for Houses</label>
-                    <label><input type="checkbox" /><span></span> Cap Rate</label>
-                    <label><input type="checkbox" /><span></span> Vacancy Rate</label>
-                    <label><input type="checkbox" /><span></span> Rent as % of Income</label>
-                    <label><input type="checkbox" /><span></span> Shadow Inventory %</label>
-                    <label><input type="checkbox" /><span></span> Rent Growth</label>
-                    <label><input type="checkbox" /><span></span> Fair Market Rents (Section 8)</label>
-                    <label><input type="checkbox" /><span></span> Historical Bond Market Options for 1 yr through 30
-                        yr</label>
-                    <label><input type="checkbox" /><span></span> School Rank</label>
-                    <label><input type="checkbox" /><span></span> Military %</label>
+                <div class="my-dropdown-menu investor-trends">
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Shadow Inventory %</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Migration Total</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Migration % of Population</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Building Permits</label>
                 </div>
             </div>
             <div class="my-menu-item">
                 Demographics
-                <div class="my-dropdown-menu">
-                    <label><input type="checkbox" /><span></span> Population</label>
-                    <label><input type="checkbox" /><span></span> Rent as % of Income</label>
-                    <label><input type="checkbox" /><span></span> Population Growth</label>
-                    <label><input type="checkbox" /><span></span> Income Growth</label>
-                    <label><input type="checkbox" /><span></span> Homeownership Rate</label>
-                    <label><input type="checkbox" /><span></span> Mortgaged Home %</label>
-                    <label><input type="checkbox" /><span></span> Median Age</label>
-                    <label><input type="checkbox" /><span></span> Poverty Rate</label>
-                    <label><input type="checkbox" /><span></span> Housing Units</label>
-                    <label><input type="checkbox" /><span></span> Housing Unit Growth Rate</label>
+                <div class="my-dropdown-menu demographics">
+                    <label><input type="checkbox" onclick="onlyOneSelect();" checked /><span></span> Population</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Household Income</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Population Growth</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Income Growth</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Remote Work %</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Homeownership Rate</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mortgaged Home %</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Age</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Poverty Rate</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Housing Units</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Housing Units Growth Rate</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> College Degree Rate</label>
                 </div>
             </div>
-            <div class="my-menu-item">
+            <div class="my-menu-item ">
                 Affordability
-                <div class="my-dropdown-menu">
-                    <label><input type="checkbox" /><span></span> Home Value</label>
-                    <label><input type="checkbox" /><span></span> Home Value Growth (YOY)</label>
-                    <label><input type="checkbox" /><span></span> Overvalued %</label>
-                    <label><input type="checkbox" /><span></span> Value/Income Ratio</label>
-                    <label><input type="checkbox" /><span></span> Mortgage Payment</label>
-                    <label><input type="checkbox" /><span></span> Salary to Afford a House</label>
-                    <label><input type="checkbox" /><span></span> Mtg Payment as % of income</label>
-                    <label><input type="checkbox" /><span></span> Property Tax Rate</label>
-                    <label><input type="checkbox" /><span></span> Buy v Rent Differential</label>
+                <div class="my-dropdown-menu affordability">
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value Growth (YoY)</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value Growth (MoM)</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Overvalued %</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Value/Income Ratio</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mortgage Payment</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Salary to Afford a House</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mtg Payment as % of Income</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Property Tax Rate</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> % Crash from 2007-12</label>
                 </div>
             </div>
             <div class="my-menu-item">
                 Market Trends
-                <div class="my-dropdown-menu">
-                    <label><input type="checkbox" /><span></span> For Sale Inventory</label>
-                    <label><input type="checkbox" /><span></span> Sale Inventory growth2</label>
-                    <label><input type="checkbox" /><span></span> Inventory Surplus/Deficit</label>
-                    <label><input type="checkbox" /><span></span> Price Cut %</label>
-                    <label><input type="checkbox" /><span></span> Days on Market</label>
-                    <label><input type="checkbox" /><span></span> Inventory as % of Houses</label>
-                    <label><input type="checkbox" /><span></span> Median Listing Price</label>
-                    <label><input type="checkbox" /><span></span> New Llisting Count</label>
+                <div class="my-dropdown-menu market-trends">
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> For Sale Inventory</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Sale Inventory Growth (YoY)</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Sale Inventory Growth (MoM)</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Inventory Surplus/Deficit</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Price Cut %</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Days on Market</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Days on Market Growth (YoY)</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Inventory as % of Houses</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Listing Price</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Listing Price (YoY)</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> New Listing Count</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> New Listing Count (YoY)</label>
                 </div>
             </div>
         </div>
     </div>
-    <div id="dashboardModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()">&times;</span>
-            <div class="dashboard">
-                <div class="card">
-                    <h3>MEDIAN PRICE</h3>
-                    <div class="value">$480k</div>
-                    <div class="change">1% MoM ▲</div>
-                </div>
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;"></div>
+    <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+        <div class="spinner"></div>
+    </div>
+    <div class="graph-modal" id="graphModal">
+        <div class="graph-modal-content">
+            <button class="close-graph-modal" id="closeGraphModal"
+                onclick="graphModal.classList.remove('active');">&times;</button>
+            <h1 class="graphTitle">Texas</h1>
 
-                <div class="card">
-                    <h3>MEDIAN DOM</h3>
-                    <div class="value">49 days</div>
-                    <div class="change">3 Days MoM ▲</div>
+            <div class="graph-container">
+                <div class="graph-left">
+                    <div class="panel-slider">
+                        <div class="panel-container">
+                            <div class="panel">Population</div>
+                            <div class="panel"><strong>N/A</strong><span class="value-text">N/A</span><span class="change-text">N/A</span></div>
+                            <div class="panel"><strong>N/A</strong><span class="value-text">N/A</span></div>
+                            <div class="panel"><strong>N/A</strong><span class="value-text">N/A</span></div>
+                            <div class="panel">Extra Panel 1</div>
+                            <div class="panel">Extra Panel 2</div>
+                            <div class="panel">Extra Panel 3</div>
+                        </div>
+                    </div>
                 </div>
+                <div class="graph-right">
+                    <div class="graph-header">
+                        <h2 class="graph-title">Population</h2>
 
-                <div class="card">
-                    <h3>SALE TO LIST</h3>
-                    <div class="value">98%</div>
-                    <div class="change negative">0% MoM ▼</div>
-                </div>
-                <div class="card">
-                    <h3>MEDIAN PRICE</h3>
-                    <div class="value">$480k</div>
-                    <div class="change">1% MoM ▲</div>
-                </div>
+                        <div class="graph-controls">
+                            <select id="dataSelector" class="data-selector">
+                                <option value="Investor Trends">Investor Trends</option>
+                                <option value="Demographics" selected>Demographics</option>
+                                <option value="Affordability">Affordability</option>
+                                <option value="Market Trends">Market Trends</option>
+                            </select>
+                            <div class="year-month-toggle-container">
+                                <span class="toggle-label">Year</span>
+                                <label class="year-month-switch">
+                                    <input type="checkbox">
+                                    <span class="year-month-slider round"></span>
+                                </label>
+                                <span class="toggle-label">Month</span>
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="card">
-                    <h3>MEDIAN DOM</h3>
-                    <div class="value">49 days</div>
-                    <div class="change">3 Days MoM ▲</div>
+                    <canvas id="chartCanvas"></canvas>
+                    <div class="slider-wrapper">
+                        <div id="rangeSlider"></div>
+                        <div class="slider-labels">
+                            <span id="minLabel"></span>
+                            <span id="maxLabel"></span>
+                        </div>
+                    </div>
                 </div>
-
-                <div class="card">
-                    <h3>SALE TO LIST</h3>
-                    <div class="value">98%</div>
-                    <div class="change negative">0% MoM ▼</div>
-                </div>
-
+            </div>
+        </div>
+    </div>
+    <div id="shareModal" class="share-modal">
+        <div class="share-modal-content">
+            <span class="share-close" onclick="closeShareModal()">&times;</span>
+            <h2>Share</h2>
+            <p>Share with your friends</p>
+            <div class="share-input">
+                <input type="text" id="shareURL" readonly>
+                <button onclick="copyToClipboard()">Copy Link</button>
             </div>
         </div>
     </div>
 </body>
-<script>
-    function openModal() {
-        document.getElementById("dashboardModal").style.display = "flex";
-    }
-
-    function closeModal() {
-        document.getElementById("dashboardModal").style.display = "none";
-    }
-
-    // Close modal if clicking outside the content
-    window.onclick = function (event) {
-        let modal = document.getElementById("dashboardModal");
-        if (event.target === modal) {
-            modal.style.display = "none";
-        }
-    }
-
-    mapboxgl.accessToken = 'pk.eyJ1IjoiZ2ljb2RlcmdhbCIsImEiOiJjazcxODNscXYwM3R3M2V0aGcwMWxvcWV0In0.s246-Q7mSmCOOeqwP-HGtA';
-
-    const map = new mapboxgl.Map({
-        container: 'map',
-        style: 'mapbox://styles/mapbox/dark-v11',
-        center: [-96, 37.8],
-        zoom: 4.5,
-        minZoom: 4.5,
-        maxZoom: 15,
-        attributionControl: false
-    });
-    const statesBoundariesUrl = 'https://raw.githubusercontent.com/jgoodall/us-maps/master/geojson/state.geo.json';
-    const countiesBoundariesUrl = 'https://raw.githubusercontent.com/joelwolfgang/GEOJson-US-Counties/master/usCounties.geojson';
-    const zipcodeUrl = 'https://raw.githubusercontent.com/talentdev0314/zip-code/main/zips-by_county.json';
-
-
-    let currentPopup = null;
-    let highlightedCityId = null;
-
-
-
-    map.on('load', () => {
-        map.addSource('city-borders', {
-            type: 'geojson',
-            data: countiesBoundariesUrl
-        });
-        map.addSource('state-borders', {
-            type: 'geojson',
-            data: statesBoundariesUrl
-        });
-        map.addLayer({
-            id: 'city-borders-layer',
-            type: 'fill',
-            source: 'city-borders',
-            paint: {
-                'fill-color': '#00FF47',
-                'fill-opacity': 0.3,
-                'fill-outline-color': '#000000'
-            }
-        });
-        map.addLayer({
-            id: 'state-borders-layer',
-            type: 'line',
-            source: 'state-borders',
-            paint: {
-                'line-color': '#000000',
-                'line-width': 2
-            }
-        });
-
-        map.on('mousemove', 'city-borders-layer', async (e) => {
-            if (!e.features || e.features.length === 0) {
-                return;
-            }
-
-            map.getCanvas().style.cursor = 'pointer';
-            const cityName = e.features[0].properties.COUNTY_STATE_NAME;
-            const geoid = e.features[0].properties.GEOID;
-            let homeValue = 'N/A';
-
-            if (currentPopup) {
-                currentPopup.remove();
-            }
-            currentPopup = new mapboxgl.Popup()
-                .setLngLat(e.lngLat)
-                .setHTML(`
-          <strong>${cityName}</strong><br>
-          Home Value: ${homeValue}
-        `)
-                .addTo(map);
-
-            if (highlightedCityId && highlightedCityId !== geoid) {
-                map.setPaintProperty('city-borders-layer', 'fill-opacity', 0.3);
-            }
-
-            highlightedCityId = geoid;
-            map.setPaintProperty('city-borders-layer', 'fill-opacity', [
-                'case',
-                ['==', ['get', 'GEOID'], highlightedCityId],
-                0.6,
-                0.3
-            ]);
-        });
-        map.on('mouseleave', 'city-borders-layer', () => {
-            map.getCanvas().style.cursor = '';  // Reset cursor
-            map.setPaintProperty('city-borders-layer', 'fill-opacity', 0.3);
-            if (currentPopup) {
-                currentPopup.remove();
-                currentPopup = null;
-            }
-            highlightedCityId = null;
-        });
-        map.on('click', 'city-borders-layer', async function (e) {
-            if (!e.features || e.features.length === 0) {
-                return;
-            }
-            console.log(e.features[0])
-
-            const cityName = e.features[0].properties.COUNTY_STATE_NAME;
-            const fipsCode = e.features[0].properties.FIPS_CODE;
-            const year = 2023;
-            const stateCode = fipsCode.split('-')[0];
-            const countyCode = fipsCode.split('-')[1];
-
-            const population = await fetchPopulationDataByYearState(year, stateCode);
-            openModal(cityName, fipsCode, population);
-            console.log('Population Data:', population);
-
-        });
-    });
-
-</script>
 <script src="custom.js"></script>
 
 </html>

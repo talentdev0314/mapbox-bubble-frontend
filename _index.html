@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Buy vs. Rent Panels & Graph Modal with Dual-Handle Slider</title>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- noUiSlider CSS & JS CDN (integrity attributes removed) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
+  <style>
+    /* Global Styles */
+    body {
+      margin: 0;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background-color: #121212;
+      color: #e0e0e0;
+    }
+    /* Container for Panels */
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      padding: 20px;
+    }
+    /* Individual Panel Style */
+    .panel {
+      background-color: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      width: 300px;
+      height: 150px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .panel:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 8px rgba(255,255,255,0.1);
+    }
+    .panel h3 {
+      margin: 0;
+    }
+    /* Modal Overlay Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal.active {
+      display: flex;
+    }
+    /* Modal Content Styles */
+    .modal-content {
+      background-color: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 20px;
+      width: 80%;
+      max-width: 800px;
+      position: relative;
+    }
+    .modal-content h2 {
+      margin-top: 0;
+    }
+    /* Close Button Styles */
+    .close-modal {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: #e0e0e0;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    /* Chart Canvas */
+    canvas {
+      background-color: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+    /* Slider Container */
+    .slider-wrapper {
+      margin-top: 20px;
+      padding: 0 10px;
+    }
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9em;
+      margin-top: 5px;
+    }
+    /* Custom styles for noUiSlider handles & tooltips */
+    .noUi-handle {
+      border: none;
+      background-color: #4caf50;
+    }
+    .noUi-connect {
+      background: #4caf50;
+    }
+  </style>
+</head>
+<body>
+  <!-- Panels Container -->
+  <div class="container">
+    <div class="panel" data-panel="1"><h3>Panel 1</h3></div>
+    <div class="panel" data-panel="2"><h3>Panel 2</h3></div>
+    <div class="panel" data-panel="3"><h3>Panel 3</h3></div>
+    <div class="panel" data-panel="4"><h3>Panel 4</h3></div>
+    <div class="panel" data-panel="5"><h3>Panel 5</h3></div>
+    <div class="panel" data-panel="6"><h3>Panel 6</h3></div>
+  </div>
+
+  <!-- Modal for the Graph -->
+  <div class="modal" id="graphModal">
+    <div class="modal-content">
+      <button class="close-modal" id="closeModal">&times;</button>
+      <h2>Graph Data for Panel <span id="panelNumber"></span></h2>
+      <canvas id="chartCanvas" width="800" height="400"></canvas>
+      <!-- Dual-handle slider for selecting the data range -->
+      <div class="slider-wrapper">
+        <div id="rangeSlider"></div>
+        <div class="slider-labels">
+          <span id="minLabel">1</span>
+          <span id="maxLabel">12</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Dummy data: 12 months labels and corresponding data points
+    const fullLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const fullData = [12, 19, 3, 5, 2, 3, 10, 15, 8, 12, 6, 9];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const panels = document.querySelectorAll('.panel');
+      const modal = document.getElementById('graphModal');
+      const closeModal = document.getElementById('closeModal');
+      const panelNumberSpan = document.getElementById('panelNumber');
+      const minLabel = document.getElementById('minLabel');
+      const maxLabel = document.getElementById('maxLabel');
+      const ctx = document.getElementById('chartCanvas').getContext('2d');
+      let chartInstance = null;
+
+      // Initialize noUiSlider with dual handles
+      const rangeSlider = document.getElementById('rangeSlider');
+      noUiSlider.create(rangeSlider, {
+        start: [1, 12],
+        connect: true,
+        step: 1,
+        range: {
+          min: 1,
+          max: 12
+        },
+        tooltips: [true, true],
+        format: {
+          to: value => Math.round(value),
+          from: value => Number(value)
+        }
+      });
+
+      // Function to update the chart with a new range
+      function updateChart(rangeValues) {
+        const [minValue, maxValue] = rangeValues.map(val => parseInt(val, 10));
+        // Slice the labels and data arrays based on the selected range.
+        // Note: Adjusting indices because our months array is 0-indexed.
+        const newLabels = fullLabels.slice(minValue - 1, maxValue);
+        const newData = fullData.slice(minValue - 1, maxValue);
+        if (chartInstance) {
+          chartInstance.data.labels = newLabels;
+          chartInstance.data.datasets[0].data = newData;
+          chartInstance.update();
+        }
+        // Update slider label display
+        minLabel.textContent = minValue;
+        maxLabel.textContent = maxValue;
+      }
+
+      // Update chart when the slider values change
+      rangeSlider.noUiSlider.on('update', (values) => {
+        updateChart(values);
+      });
+
+      // Panel click events
+      panels.forEach(panel => {
+        panel.addEventListener('click', () => {
+          const panelNum = panel.getAttribute('data-panel');
+          panelNumberSpan.textContent = panelNum;
+          // Hide the clicked panel
+          panel.style.display = 'none';
+          // Show the modal
+          modal.classList.add('active');
+
+          // Reset slider to full range
+          rangeSlider.noUiSlider.set([1, 12]);
+
+          // Create (or recreate) the Chart.js line graph with the full data range
+          if (chartInstance) {
+            chartInstance.destroy();
+          }
+          chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: fullLabels,
+              datasets: [{
+                label: 'Monthly Data for Panel ' + panelNum,
+                data: fullData,
+                borderColor: '#4caf50',
+                backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                fill: true,
+                tension: 0.4
+              }]
+            },
+            options: {
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: { color: '#e0e0e0' },
+                  grid: { color: '#333' }
+                },
+                x: {
+                  ticks: { color: '#e0e0e0' },
+                  grid: { color: '#333' }
+                }
+              },
+              plugins: {
+                legend: {
+                  labels: { color: '#e0e0e0' }
+                }
+              }
+            }
+          });
+        });
+      });
+
+      // Close modal button event
+      closeModal.addEventListener('click', () => {
+        modal.classList.remove('active');
+        // Reset panels visibility
+        panels.forEach(panel => {
+          panel.style.display = 'flex';
+        });
+      });
+    });
+  </script>
+</body>
+</html>
