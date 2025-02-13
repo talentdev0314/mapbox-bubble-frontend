@@ -1,5 +1,5 @@
-// const host = 'https://mapbox-bubble-backend.onrender.com'
-const host = 'http://127.0.0.1:5000'
+const host = 'https://mapbox-bubble-backend.onrender.com'
+// const host = 'http://127.0.0.1:5000'
 async function fetchOneStateYoYData(stateCode, abbreviation, dataPoint) {
     dataPoint = dataPoint.replace(/\//g, " ");
     const params = new URLSearchParams({
