@@ -1,8 +1,13 @@
-const host = 'https://mapbox-bubble-backend.onrender.com'
-// const host = 'http://127.0.0.1:5000'
+// const host = 'https://mapbox-bubble-backend.onrender.com'
+const host = 'http://127.0.0.1:5000'
 async function fetchOneStateYoYData(stateCode, abbreviation, dataPoint) {
     dataPoint = dataPoint.replace(/\//g, " ");
-    const url = `${host}/api/state/${stateCode}/${abbreviation}/${dataPoint}/yoy`;
+    const params = new URLSearchParams({
+        stateCode: stateCode,
+        abbreviation: abbreviation,
+        dataPoint: dataPoint
+    }).toString();
+    const url = `${host}/api/state/yoy?${params}`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -17,7 +22,12 @@ async function fetchOneStateYoYData(stateCode, abbreviation, dataPoint) {
 
 async function fetchOneStateMoMData(stateCode, abbreviation, dataPoint) {
     dataPoint = dataPoint.replace(/\//g, " ");
-    const url = `${host}/api/state/${stateCode}/${abbreviation}/${dataPoint}/mom`;
+    const params = new URLSearchParams({
+        stateCode: stateCode,
+        abbreviation: abbreviation,
+        dataPoint: dataPoint
+    }).toString();
+    const url = `${host}/api/state/mom?${params}`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -32,7 +42,10 @@ async function fetchOneStateMoMData(stateCode, abbreviation, dataPoint) {
 
 async function fetchAllStatesData(dataPoint) {
     dataPoint = dataPoint.replace(/\//g, " ");
-    const url = `${host}/api/all-states/${dataPoint}`;
+    const params = new URLSearchParams({
+        dataPoint: dataPoint
+    }).toString();
+    const url = `${host}/api/all-states?${params}`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -47,7 +60,12 @@ async function fetchAllStatesData(dataPoint) {
 
 async function fetchOneMetroYoYData(metroCode, abbreviation, dataPoint) {
     dataPoint = dataPoint.replace(/\//g, " ");
-    const url = `${host}/api/metro/${metroCode}/${abbreviation}/${dataPoint}/yoy`;
+    const params = new URLSearchParams({
+        metroCode: metroCode,
+        abbreviation: abbreviation,
+        dataPoint: dataPoint
+    }).toString();
+    const url = `${host}/api/metro/yoy?${params}`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -62,7 +80,12 @@ async function fetchOneMetroYoYData(metroCode, abbreviation, dataPoint) {
 
 async function fetchOneMetroMoMData(metroCode, abbreviation, dataPoint) {
     dataPoint = dataPoint.replace(/\//g, " ");
-    const url = `${host}/api/metro/${metroCode}/${abbreviation}/${dataPoint}/mom`;
+    const params = new URLSearchParams({
+        metroCode: metroCode,
+        abbreviation: abbreviation,
+        dataPoint: dataPoint
+    }).toString();
+    const url = `${host}/api/metro/mom?${params}`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -77,7 +100,10 @@ async function fetchOneMetroMoMData(metroCode, abbreviation, dataPoint) {
 
 async function fetchAllMetrosData(dataPoint) {
     dataPoint = dataPoint.replace(/\//g, " ");
-    const url = `${host}/api/all-metros/${dataPoint}`;
+    const params = new URLSearchParams({
+        dataPoint: dataPoint
+    }).toString();
+    const url = `${host}/api/all-metros?${params}`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -92,7 +118,12 @@ async function fetchAllMetrosData(dataPoint) {
 
 async function fetchOneCountyYoYData(countyCode, abbreviation, dataPoint) {
     dataPoint = dataPoint.replace(/\//g, " ");
-    const url = `${host}/api/county/${countyCode}/${abbreviation}/${dataPoint}/yoy`;
+    const params = new URLSearchParams({
+        countyCode: countyCode,
+        abbreviation: abbreviation,
+        dataPoint: dataPoint
+    }).toString();
+    const url = `${host}/api/county/yoy?${params}`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -107,7 +138,12 @@ async function fetchOneCountyYoYData(countyCode, abbreviation, dataPoint) {
 
 async function fetchOneCountyMoMData(countyCode, abbreviation, dataPoint) {
     dataPoint = dataPoint.replace(/\//g, " ");
-    const url = `${host}/api/county/${countyCode}/${abbreviation}/${dataPoint}/mom`;
+    const params = new URLSearchParams({
+        countyCode: countyCode,
+        abbreviation: abbreviation,
+        dataPoint: dataPoint
+    }).toString();
+    const url = `${host}/api/county/mom${params}`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -122,7 +158,10 @@ async function fetchOneCountyMoMData(countyCode, abbreviation, dataPoint) {
 
 async function fetchAllCountiesData(dataPoint) {
     dataPoint = dataPoint.replace(/\//g, " ");
-    const url = `${host}/api/all-counties/${dataPoint}`;
+    const params = new URLSearchParams({
+        dataPoint: dataPoint
+    }).toString();
+    const url = `${host}/api/all-counties${params}`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -1135,7 +1174,7 @@ async function showData(yoy) {
                             } else if (value >= 1000) {
                                 return (value / 1000).toFixed(1) + 'K'; // Convert to K (thousands)
                             }
-                            return value; // Show small numbers as-is
+                            return Number(value.toFixed(2));
                         }
                     },
                     grid: { color: '#333' },
