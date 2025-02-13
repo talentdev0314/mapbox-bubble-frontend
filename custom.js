@@ -1,6 +1,8 @@
+const host = 'https://mapbox-bubble-backend.onrender.com'
+// const host = 'http://127.0.0.1:5000'
 async function fetchOneStateYoYData(stateCode, abbreviation, dataPoint) {
     dataPoint = dataPoint.replace(/\//g, " ");
-    const url = `http://127.0.0.1:5000/api/state/${stateCode}/${abbreviation}/${dataPoint}/yoy`;
+    const url = `${host}/api/state/${stateCode}/${abbreviation}/${dataPoint}/yoy`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -15,7 +17,7 @@ async function fetchOneStateYoYData(stateCode, abbreviation, dataPoint) {
 
 async function fetchOneStateMoMData(stateCode, abbreviation, dataPoint) {
     dataPoint = dataPoint.replace(/\//g, " ");
-    const url = `http://127.0.0.1:5000/api/state/${stateCode}/${abbreviation}/${dataPoint}/mom`;
+    const url = `${host}/api/state/${stateCode}/${abbreviation}/${dataPoint}/mom`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -30,7 +32,7 @@ async function fetchOneStateMoMData(stateCode, abbreviation, dataPoint) {
 
 async function fetchAllStatesData(dataPoint) {
     dataPoint = dataPoint.replace(/\//g, " ");
-    const url = `http://127.0.0.1:5000/api/all-states/${dataPoint}`;
+    const url = `${host}/api/all-states/${dataPoint}`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -45,7 +47,7 @@ async function fetchAllStatesData(dataPoint) {
 
 async function fetchOneMetroYoYData(metroCode, abbreviation, dataPoint) {
     dataPoint = dataPoint.replace(/\//g, " ");
-    const url = `http://127.0.0.1:5000/api/metro/${metroCode}/${abbreviation}/${dataPoint}/yoy`;
+    const url = `${host}/api/metro/${metroCode}/${abbreviation}/${dataPoint}/yoy`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -60,7 +62,22 @@ async function fetchOneMetroYoYData(metroCode, abbreviation, dataPoint) {
 
 async function fetchOneMetroMoMData(metroCode, abbreviation, dataPoint) {
     dataPoint = dataPoint.replace(/\//g, " ");
-    const url = `http://127.0.0.1:5000/api/metro/${metroCode}/${abbreviation}/${dataPoint}/mom`;
+    const url = `${host}/api/metro/${metroCode}/${abbreviation}/${dataPoint}/mom`;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+}
+
+async function fetchAllMetrosData(dataPoint) {
+    dataPoint = dataPoint.replace(/\//g, " ");
+    const url = `${host}/api/all-metros/${dataPoint}`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -75,7 +92,7 @@ async function fetchOneMetroMoMData(metroCode, abbreviation, dataPoint) {
 
 async function fetchOneCountyYoYData(countyCode, abbreviation, dataPoint) {
     dataPoint = dataPoint.replace(/\//g, " ");
-    const url = `http://127.0.0.1:5000/api/county/${countyCode}/${abbreviation}/${dataPoint}/yoy`;
+    const url = `${host}/api/county/${countyCode}/${abbreviation}/${dataPoint}/yoy`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -90,7 +107,22 @@ async function fetchOneCountyYoYData(countyCode, abbreviation, dataPoint) {
 
 async function fetchOneCountyMoMData(countyCode, abbreviation, dataPoint) {
     dataPoint = dataPoint.replace(/\//g, " ");
-    const url = `http://127.0.0.1:5000/api/county/${countyCode}/${abbreviation}/${dataPoint}/mom`;
+    const url = `${host}/api/county/${countyCode}/${abbreviation}/${dataPoint}/mom`;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+}
+
+async function fetchAllCountiesData(dataPoint) {
+    dataPoint = dataPoint.replace(/\//g, " ");
+    const url = `${host}/api/all-counties/${dataPoint}`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -290,7 +322,7 @@ document.addEventListener("DOMContentLoaded", function () {
         map.off('click', 'zipcode-areas-layer', onZipcodeMouseClick);
     }
 
-    selectElement.addEventListener("change", function () {
+    selectElement.addEventListener("change", async function () {
         const selectedValue = this.value;
         map.setLayoutProperty("state-borders-layer", "visibility", "none");
         map.setLayoutProperty("state-areas-layer", "visibility", "none");
@@ -309,6 +341,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const marketTrendsCheckboxes = document.querySelector('.market-trends');
 
         if (selectedValue === "state") {
+            stateData = await fetchAllStatesData(dataPoint);
             map.setLayoutProperty("state-borders-layer", "visibility", "visible");
             map.setLayoutProperty("state-areas-layer", "visibility", "visible");
             investorTrendsCheckboxes.innerHTML = `
@@ -359,10 +392,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
             enableStateEvents();
         } else if (selectedValue === "metro") {
+            metroData = await fetchAllMetrosData(dataPoint);
+
             // map.setLayoutProperty("state-borders-layer", "visibility", "visible");
             map.setLayoutProperty("metro-borders-layer", "visibility", "visible");
             map.setLayoutProperty("metro-areas-layer", "visibility", "visible");
-            console.log(investorTrendsCheckboxes);
             investorTrendsCheckboxes.innerHTML = `
                 <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rental Rate</label>
                 <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rent for Houses</label>
@@ -418,6 +452,8 @@ document.addEventListener("DOMContentLoaded", function () {
             `;
             enableMetroEvents();
         } else if (selectedValue === "county") {
+            countyData = await fetchAllCountiesData(dataPoint);
+
             map.setLayoutProperty("state-borders-layer", "visibility", "visible");
             map.setLayoutProperty("county-areas-layer", "visibility", "visible");
             investorTrendsCheckboxes.innerHTML = `
@@ -474,7 +510,8 @@ document.addEventListener("DOMContentLoaded", function () {
             `;
             enableCountyEvents();
         } else if (selectedValue === "zipcode") {
-            console.log("adafasdfadasfdasfdasdf");
+            zipcodeData = await fetchAllZipcodesData(dataPoint);
+
             map.setLayoutProperty("state-borders-layer", "visibility", "visible");
             map.setLayoutProperty("zipcode-areas-layer", "visibility", "visible");
             investorTrendsCheckboxes.innerHTML = `
@@ -659,7 +696,7 @@ map.on('load', () => {
     map.on('click', 'state-areas-layer', onStateMouseClick);
 });
 
-function onlyOneSelect() {
+async function onlyOneSelect() {
     const checkboxes = document.querySelectorAll('.my-dropdown-menu input[type="checkbox"]');
     const e = window.event;
     checkboxes.forEach(checkbox => {
@@ -668,10 +705,21 @@ function onlyOneSelect() {
         }
     });
     e.target.checked = true;
-    let data = [];
     const label = e.target.closest('label');
     const text = label.childNodes[2];
     dataPoint = text.nodeValue.trim().replace(/\s+/g, ' ');
+
+    const x = document.querySelector("select").value;
+    if (x == "state") {
+        stateData = await fetchAllStatesData(dataPoint);
+    } else if (x == "metro") {
+        metroData = await fetchAllMetrosData(dataPoint);
+    } else if (x == "county") {
+        countyData = await fetchAllCountiesData(dataPoint);
+    } else if (x == "zipcode") {
+        zipcodeData = await fetchAllZipcodesData(dataPoint);
+    }
+
     if (label.parentElement.classList.contains('investor-trends')) {
         category = "Investor Trends";
     } else if (label.parentElement.classList.contains('demographics')) {
@@ -681,7 +729,6 @@ function onlyOneSelect() {
     } else if (label.parentElement.classList.contains('market-trends')) {
         category = "Market Trends";
     }
-    stateData = data;
 }
 
 async function onCountyMouseMove(e) {
@@ -745,12 +792,6 @@ async function onZipcodeMouseMove(e) {
     map.getCanvas().style.cursor = 'pointer';
     const countyName = e.features[0].properties.COUNTY_STATE_NAME;
     const geoid = e.features[0].properties.GEOID;
-    let thisStateData = stateData[geoid] ? stateData[geoid] : {};
-    thisStateData = {
-        'Home Value': 'N/A',
-        'Home Value': 'N/A',
-        'Home Value': 'N/A'
-    }
     if (currentPopup) {
         currentPopup.remove();
     }
@@ -807,8 +848,10 @@ async function onStateMouseMove(e) {
     }
     map.getCanvas().style.cursor = 'pointer';
     const stateName = e.features[0].properties.NAME10;
+    const abbreviation = e.features[0].properties.STUSPS10;
     const geoid = e.features[0].properties.GEOID10;
-    let thisStateData = stateData[geoid] ? stateData[geoid] : {};
+    let int_geoid = String(Number(geoid))
+
     if (currentPopup) {
         currentPopup.remove();
     }
@@ -817,8 +860,8 @@ async function onStateMouseMove(e) {
         <p>${stateName}</p>
         <div class="container">
             `;
-
-    let temp = Object.entries(thisStateData).map(([key, value]) => `<div class="row"><span>${key}:</span><span>${value}</span></div>`).join("");
+    const value = stateData[int_geoid] ? stateData[int_geoid] : stateData[abbreviation] ? stateData[abbreviation] : "";
+    let temp = `<div class="row"><span>${dataPoint}:</span><span>${value}</span></div>`;
     html += temp + `</div></div></div>`;
     currentPopup = new mapboxgl.Popup({ closeButton: false, offset: [0, -20], className: 'no-arrow-popup' })
         .setLngLat(e.lngLat)
@@ -870,6 +913,8 @@ async function onMetroMouseMove(e) {
     map.getCanvas().style.cursor = 'pointer';
     const metroName = e.features[0].properties.NAME;
     const geoid = e.features[0].properties.GEOID;
+    let int_geoid = String(Number(geoid))
+
     if (currentPopup) {
         currentPopup.remove();
     }
@@ -879,7 +924,7 @@ async function onMetroMouseMove(e) {
         <div class="container">
             `;
 
-    let temp = `<div class="row"><span>${dataPoint}:</span><span>${metroData[geoid]}</span></div>`;
+    let temp = `<div class="row"><span>${dataPoint}:</span><span>${metroData[int_geoid]}</span></div>`;
     html += temp + `</div></div></div>`;
     currentPopup = new mapboxgl.Popup({ closeButton: false, offset: [0, -20], className: 'no-arrow-popup' })
         .setLngLat(e.lngLat)
@@ -953,6 +998,7 @@ function updateChart(rangeValues, fullLabels, fullData) {
     if (chartInstance) {
         chartInstance.data.labels = newLabels;
         chartInstance.data.datasets[0].data = newData;
+        chartInstance.data.datasets[1].data = newData;
         chartInstance.update();
     }
 }
@@ -1040,17 +1086,42 @@ async function showData(yoy) {
     if (chartInstance) {
         chartInstance.destroy();
     }
+
+    const line_gradient = ctx.createLinearGradient(0, 0, 700, 0);
+    line_gradient.addColorStop(0, 'rgb(252, 210, 151)');
+    line_gradient.addColorStop(0.25, 'rgb(234, 84, 139)');
+    line_gradient.addColorStop(0.5, 'rgb(136, 47, 173)');
+    line_gradient.addColorStop(0.75, 'rgb(44, 66, 222)');
+    line_gradient.addColorStop(1, 'rgb(17, 178, 247)');
+
+    const bar_gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    bar_gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+    bar_gradient.addColorStop(1, 'rgba(255, 255, 255, 1)');
+
     chartInstance = new Chart(ctx, {
-        type: 'line',
+        type: 'bar',
         data: {
             labels: fullLabels,
             datasets: [{
+                type: 'line',   // 🔹 Column Chart
                 label: dataPoint,
                 data: fullData,
-                borderColor: '#4caf50',
-                backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                borderColor: line_gradient,
+                backgroundColor: 'rgba(76, 175, 80, 0)',
                 fill: true,
-                tension: 0.4
+                tension: 0.4,
+                pointBackgroundColor: line_gradient, // White points
+                pointBorderColor: 'white',  // Points match the line gradient
+                pointRadius: 5,
+            }, {
+                type: 'bar',   // 🔹 Column Chart
+                label: dataPoint,
+                data: fullData,
+                backgroundColor: bar_gradient,
+                datalabels: {
+                    display: false  // This will hide data labels for the bar chart
+                },
+                barThickness: 20
             }]
         },
         options: {
@@ -1067,7 +1138,8 @@ async function showData(yoy) {
                             return value; // Show small numbers as-is
                         }
                     },
-                    grid: { color: '#333' }
+                    grid: { color: '#333' },
+                    beginAtZero: false
                 },
                 x: {
                     ticks: {
@@ -1080,7 +1152,10 @@ async function showData(yoy) {
             },
             plugins: {
                 legend: {
-                    labels: { color: '#e0e0e0' }
+                    labels: false
+                },
+                tooltip: {
+                    filter: (item, data) => item.datasetIndex !== 1
                 },
                 datalabels: {
                     align: 'end',

@@ -494,7 +494,7 @@ canvas {
   background-color: #4caf50;
 }
 .noUi-connect {
-  background: #4caf50;
+  background: linear-gradient(to right, rgb(252, 210, 151) 0%, rgb(234, 84, 139) 25%, rgb(136, 47, 173) 50%, rgb(44, 66, 222) 75%, rgb(17, 178, 247) 100%);
 }
 .graph-container {
   display: flex;
@@ -536,7 +536,7 @@ canvas {
   color: white;
   font-size: 16px;
   font-weight: bold;
-  padding: 5px;
+  padding: 8px;
   border-radius: 8px;
   border: 1px solid #333;
   display: flex;
