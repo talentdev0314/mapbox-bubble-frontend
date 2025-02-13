@@ -450,7 +450,7 @@ body {
   border-radius: 8px;
   padding: 20px;
   width: 80%;
-  max-width: 800px;
+  max-width: 1000px;
   position: relative;
 }
 .graph-modal-content h1 {
@@ -500,7 +500,7 @@ canvas {
   display: flex;
   gap: 20px; /* Space between elements */
   align-items: center;
-  height: 400px;
+  height: 600px;
 }
 
 .graph-left {
@@ -534,21 +534,22 @@ canvas {
 .panel {
   background-color: rgba(20, 20, 40, 0.9);
   color: white;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: bold;
   padding: 5px;
   border-radius: 8px;
   border: 1px solid #333;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   border-color: white;
   border-width: 2px;
+  cursor: pointer;
 }
 
 .value-text {
-  color: #4caf50;
-  font-size: 20px;
+  margin-top: 10px;
+  color: #ffffff;
+  font-size: 12px;
 }
 
 .change-text {
@@ -667,6 +668,17 @@ canvas {
   text-align: center;
   flex-grow: 1;
   color: white;
+}
+
+.graph-description {
+  color: white;
+  font-size: 16px; /* Adjust font size as needed */
+  margin-top: 10px; /* Add some spacing below the title */
+}
+
+.graph-left-controls {
+  display: flex;
+  flex-direction: column;
 }
 
 .graph-controls {
