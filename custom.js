@@ -143,7 +143,7 @@ async function fetchOneCountyMoMData(countyCode, abbreviation, dataPoint) {
         abbreviation: abbreviation,
         dataPoint: dataPoint
     }).toString();
-    const url = `${host}/api/county/mom${params}`;
+    const url = `${host}/api/county/mom?${params}`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -161,7 +161,7 @@ async function fetchAllCountiesData(dataPoint) {
     const params = new URLSearchParams({
         dataPoint: dataPoint
     }).toString();
-    const url = `${host}/api/all-counties${params}`;
+    const url = `${host}/api/all-counties?${params}`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
