@@ -1174,7 +1174,7 @@ async function showData(yoy) {
                             } else if (value >= 1000) {
                                 return (value / 1000).toFixed(1) + 'K'; // Convert to K (thousands)
                             }
-                            return Number(value.toFixed(2));
+                            return Number(value).toFixed(2);
                         }
                     },
                     grid: { color: '#333' },
@@ -1206,9 +1206,9 @@ async function showData(yoy) {
                                 if (value >= 1000000) {
                                     return (value / 1000000).toFixed(1) + 'M';
                                 } else if (value >= 1000) {
-                                    return (value / 1000).toFixed(0) + 'K';
+                                    return (value / 1000).toFixed(1) + 'K';
                                 }
-                                return value;
+                                return Number(value).toFixed(2);
                             } else {
                                 return '';
                             }
@@ -1216,9 +1216,9 @@ async function showData(yoy) {
                             if (value >= 1000000) {
                                 return (value / 1000000).toFixed(1) + 'M';
                             } else if (value >= 1000) {
-                                return (value / 1000).toFixed(0) + 'K';
+                                return (value / 1000).toFixed(1) + 'K';
                             }
-                            return value;
+                            return Number(value).toFixed(2);
                         }
                     }
                 }
