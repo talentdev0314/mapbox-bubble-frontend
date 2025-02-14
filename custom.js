@@ -735,7 +735,7 @@ map.on('load', () => {
     map.on('click', 'state-areas-layer', onStateMouseClick);
 });
 
-async function onlyOneSelect() {
+async function onlyOneSelect() { 
     const checkboxes = document.querySelectorAll('.my-dropdown-menu input[type="checkbox"]');
     const e = window.event;
     checkboxes.forEach(checkbox => {
