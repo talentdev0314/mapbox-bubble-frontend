@@ -749,6 +749,7 @@ async function onlyOneSelect() {
     dataPoint = text.nodeValue.trim().replace(/\s+/g, ' ');
 
     const x = document.querySelector("select").value;
+    showLoading();
     if (x == "state") {
         stateData = await fetchAllStatesData(dataPoint);
     } else if (x == "metro") {
@@ -758,6 +759,7 @@ async function onlyOneSelect() {
     } else if (x == "zipcode") {
         zipcodeData = await fetchAllZipcodesData(dataPoint);
     }
+    hideLoading();
 
     if (label.parentElement.classList.contains('investor-trends')) {
         category = "Investor Trends";
