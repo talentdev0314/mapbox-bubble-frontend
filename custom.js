@@ -211,7 +211,7 @@ searchBox.addEventListener('input', function () {
 });
 
 function fetchSuggestions(query) {
-    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxgl.accessToken}&types=place,region,locality,poi`;
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxgl.accessToken}&types=place,region,locality,poi&country=us`;
 
     fetch(url)
         .then(response => response.json())
