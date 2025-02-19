@@ -41,7 +41,10 @@ body {
 .suggestion-item:hover {
   background-color: #f1f1f1;
 }
-
+.current-location {
+  font-weight: bold;
+  color: red;
+}
 .search-container {
   position: absolute;
   top: 5px;

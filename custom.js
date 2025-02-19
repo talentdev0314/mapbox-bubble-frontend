@@ -18,7 +18,7 @@ async function fetchOneStateYoYData(stateCode, abbreviation, dataPoint) {
         console.error('Error fetching data:', error);
     }
 }
- 
+
 async function fetchOneStateMoMData(stateCode, abbreviation, dataPoint) {
     dataPoint = dataPoint.replace(/\//g, " ");
     const params = new URLSearchParams({
@@ -211,7 +211,11 @@ searchBox.addEventListener('input', function () {
 });
 
 function fetchSuggestions(query) {
-    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxgl.accessToken}&types=place,region,locality,poi&country=us`;
+    if (query.length < 2) {
+        document.getElementById('suggestions').style.display = 'none';
+        return;
+    }
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxgl.accessToken}&types=place,region,postcode&country=us`;
 
     fetch(url)
         .then(response => response.json())
@@ -222,19 +226,62 @@ function fetchSuggestions(query) {
             } else {
                 suggestionsBox.style.display = 'none';
             }
+
+
+
         })
         .catch(error => console.error('Error fetching suggestions:', error));
 }
 
 function displaySuggestions(suggestions) {
     suggestionsBox.innerHTML = '';
+
+    const locationOption = document.createElement('div');
+    locationOption.classList.add('suggestion-item', 'current-location');
+    locationOption.textContent = '📍 Use my current location';
+    locationOption.addEventListener('click', () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                const { latitude, longitude } = position.coords;
+                fetchReverseGeocode(latitude, longitude);
+            }, error => {
+                alert("Location access denied or unavailable.");
+            });
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    });
+    suggestionsBox.appendChild(locationOption);
+
     suggestions.forEach(suggestion => {
         const suggestionItem = document.createElement('div');
         suggestionItem.classList.add('suggestion-item');
         suggestionItem.textContent = suggestion.place_name;
         suggestionItem.addEventListener('click', () => {
+            let zoom = 4.5;
+            if (suggestion.place_type.includes('region')) {
+                zoom = 4.5;
+                selectChange('state');
+                document.querySelector("select").value = "state";
+
+            } else if (suggestion.place_type.includes('postcode')) {
+                zoom = 15;
+                selectChange('zipcode');
+                document.querySelector("select").value = "zipcode";
+            } else if (suggestion.place_type.includes('place')) {
+                zoom = 8;
+                selectChange('metro');
+                document.querySelector("select").value = "metro";
+            } else if (suggestion.context) {
+                const county = suggestion.context.find(c => c.id.startsWith('county'));
+                if (county) {
+                    zoom = 11.5;
+                    selectChange('county');
+                    document.querySelector("select").value = "county";
+                }
+            }
             const [lng, lat] = suggestion.geometry.coordinates;
-            map.flyTo({ center: [lng, lat], zoom: 15 });
+            map.flyTo({ center: [lng, lat], zoom: zoom });
 
             searchBox.value = suggestion.place_name;
             suggestionsBox.style.display = 'none';
@@ -242,6 +289,42 @@ function displaySuggestions(suggestions) {
         suggestionsBox.appendChild(suggestionItem);
     });
     suggestionsBox.style.display = 'block';
+}
+
+document.getElementById('search-box').addEventListener('focus', () => {
+    document.getElementById('suggestions').style.display = 'block';
+});
+
+document.addEventListener('click', (event) => {
+    if (!document.querySelector('.search-container').contains(event.target)) {
+        document.getElementById('suggestions').style.display = 'none';
+    }
+});
+
+document.getElementById('currentLocation').addEventListener('click', () => {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+            const { latitude, longitude } = position.coords;
+            fetchReverseGeocode(latitude, longitude);
+        }, error => {
+            alert("Location access denied or unavailable.");
+        });
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
+});
+
+function fetchReverseGeocode(lat, lng) {
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxgl.accessToken}`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const place = data.features[0]?.place_name || "Unknown location";
+            document.getElementById('search-box').value = place;
+            document.getElementById('suggestions').style.display = 'none';
+        })
+        .catch(error => console.error("Error getting location:", error));
 }
 
 document.addEventListener('click', (event) => {
@@ -352,6 +435,10 @@ const statesBoundariesUrl = 'https://raw.githubusercontent.com/jgoodall/us-maps/
 const metroBoundariesUrl = 'https://raw.githubusercontent.com/loganpowell/census-geojson/refs/heads/master/GeoJSON/20m/2017/metropolitan-statistical-area!micropolitan-statistical-area.json';
 const countiesBoundariesUrl = 'https://raw.githubusercontent.com/joelwolfgang/GEOJson-US-Counties/master/usCounties.geojson';
 const zipcodeBoundariesUrl = 'https://raw.githubusercontent.com/ndrezn/zip-code-geojson/refs/heads/main/usa_zip_codes_geo_100m.json';
+// const statesBoundariesUrl = 'https://jgoodall/us-maps/master/geojson/state.geo.json';
+// const metroBoundariesUrl = 'https://loganpowell/census-geojson/refs/heads/master/GeoJSON/20m/2017/metropolitan-statistical-area!micropolitan-statistical-area.json';
+// const countiesBoundariesUrl = 'https://joelwolfgang/GEOJson-US-Counties/master/usCounties.geojson';
+// const zipcodeBoundariesUrl = 'https://ndrezn/zip-code-geojson/refs/heads/main/usa_zip_codes_geo_100m.json';
 
 let currentPopup = null;
 let highlightedCityId = null;
@@ -371,293 +458,51 @@ document.addEventListener("DOMContentLoaded", async function () {
     res = await fetchAllStatesData(dataPoint);
     stateData = res;
 })
+function enableStateEvents() {
+    map.on('mousemove', 'state-areas-layer', onStateMouseMove);
+    map.on('mouseleave', 'state-areas-layer', onStateMouseLeave);
+    map.on('click', 'state-areas-layer', onStateMouseClick);
+}
+function disableStateEvents() {
+    map.off('mousemove', 'state-areas-layer', onStateMouseMove);
+    map.off('mouseleave', 'state-areas-layer', onStateMouseLeave);
+    map.off('click', 'state-areas-layer', onStateMouseClick);
+}
+function enableMetroEvents() {
+    map.on('mousemove', 'metro-areas-layer', onMetroMouseMove);
+    map.on('mouseleave', 'metro-areas-layer', onMetroMouseLeave);
+    map.on('click', 'metro-areas-layer', onMetroMouseClick);
+}
+function disableMetroEvents() {
+    map.off('mousemove', 'metro-areas-layer', onMetroMouseMove);
+    map.off('mouseleave', 'metro-areas-layer', onMetroMouseLeave);
+    map.off('click', 'metro-areas-layer', onMetroMouseClick);
+}
+function enableCountyEvents() {
+    map.on('mousemove', 'county-areas-layer', onCountyMouseMove);
+    map.on('mouseleave', 'county-areas-layer', onCountyMouseLeave);
+    map.on('click', 'county-areas-layer', onCountyMouseClick);
+}
+function disableCountyEvents() {
+    map.off('mousemove', 'county-areas-layer', onCountyMouseMove);
+    map.off('mouseleave', 'county-areas-layer', onCountyMouseLeave);
+    map.off('click', 'county-areas-layer', onCountyMouseClick);
+}
+function enableZipcodeEvents() {
+    map.on('mousemove', 'zipcode-areas-layer', onZipcodeMouseMove);
+    map.on('mouseleave', 'zipcode-areas-layer', onZipcodeMouseLeave);
+    map.on('click', 'zipcode-areas-layer', onZipcodeMouseClick);
+}
+function disableZipcodeEvents() {
+    map.off('mousemove', 'zipcode-areas-layer', onZipcodeMouseMove);
+    map.off('mouseleave', 'zipcode-areas-layer', onZipcodeMouseLeave);
+    map.off('click', 'zipcode-areas-layer', onZipcodeMouseClick);
+}
 
 document.addEventListener("DOMContentLoaded", function () {
     const selectElement = document.querySelector("select");
-    async function enableStateEvents() {
-        map.on('mousemove', 'state-areas-layer', onStateMouseMove);
-        map.on('mouseleave', 'state-areas-layer', onStateMouseLeave);
-        map.on('click', 'state-areas-layer', onStateMouseClick);
-    }
-    function disableStateEvents() {
-        map.off('mousemove', 'state-areas-layer', onStateMouseMove);
-        map.off('mouseleave', 'state-areas-layer', onStateMouseLeave);
-        map.off('click', 'state-areas-layer', onStateMouseClick);
-    }
-    function enableMetroEvents() {
-        map.on('mousemove', 'metro-areas-layer', onMetroMouseMove);
-        map.on('mouseleave', 'metro-areas-layer', onMetroMouseLeave);
-        map.on('click', 'metro-areas-layer', onMetroMouseClick);
-    }
-    function disableMetroEvents() {
-        map.off('mousemove', 'metro-areas-layer', onMetroMouseMove);
-        map.off('mouseleave', 'metro-areas-layer', onMetroMouseLeave);
-        map.off('click', 'metro-areas-layer', onMetroMouseClick);
-    }
-    function enableCountyEvents() {
-        map.on('mousemove', 'county-areas-layer', onCountyMouseMove);
-        map.on('mouseleave', 'county-areas-layer', onCountyMouseLeave);
-        map.on('click', 'county-areas-layer', onCountyMouseClick);
-    }
-    function disableCountyEvents() {
-        map.off('mousemove', 'county-areas-layer', onCountyMouseMove);
-        map.off('mouseleave', 'county-areas-layer', onCountyMouseLeave);
-        map.off('click', 'county-areas-layer', onCountyMouseClick);
-    }
-    function enableZipcodeEvents() {
-        map.on('mousemove', 'zipcode-areas-layer', onZipcodeMouseMove);
-        map.on('mouseleave', 'zipcode-areas-layer', onZipcodeMouseLeave);
-        map.on('click', 'zipcode-areas-layer', onZipcodeMouseClick);
-    }
-    function disableZipcodeEvents() {
-        map.off('mousemove', 'zipcode-areas-layer', onZipcodeMouseMove);
-        map.off('mouseleave', 'zipcode-areas-layer', onZipcodeMouseLeave);
-        map.off('click', 'zipcode-areas-layer', onZipcodeMouseClick);
-    }
-
     selectElement.addEventListener("change", async function () {
-        const selectedValue = this.value;
-        map.setLayoutProperty("state-borders-layer", "visibility", "none");
-        map.setLayoutProperty("state-areas-layer", "visibility", "none");
-        map.setLayoutProperty("metro-areas-layer", "visibility", "none");
-        map.setLayoutProperty("metro-borders-layer", "visibility", "none");
-        map.setLayoutProperty("county-areas-layer", "visibility", "none");
-        map.setLayoutProperty("zipcode-areas-layer", "visibility", "none");
-        disableStateEvents();
-        disableMetroEvents();
-        disableCountyEvents();
-        disableZipcodeEvents();
-
-        const investorTrendsCheckboxes = document.querySelector('.investor-trends');
-        const demographicsCheckboxes = document.querySelector('.demographics');
-        const affordabilityCheckboxes = document.querySelector('.affordability');
-        const marketTrendsCheckboxes = document.querySelector('.market-trends');
-
-        if (selectedValue === "state") {
-            stateData = await fetchAllStatesData(dataPoint);
-            map.setLayoutProperty("state-borders-layer", "visibility", "visible");
-            map.setLayoutProperty("state-areas-layer", "visibility", "visible");
-            investorTrendsCheckboxes.innerHTML = `
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Shadow Inventory %</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Migration Total</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Migration % of Population</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Building Permits</label>
-            `;
-            demographicsCheckboxes.innerHTML = `
-                <label><input type="checkbox" onclick="onlyOneSelect();" checked/><span></span> Population</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Household Income</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Population Growth</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Income Growth</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Remote Work %</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Homeownership Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mortgaged Home %</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Age</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Poverty Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Housing Units</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Housing Units Growth Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> College Degree Rate</label>
-            `;
-            affordabilityCheckboxes.innerHTML = `
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value Growth (YoY)</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value Growth (MoM)</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Overvalued %</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Value/Income Ratio</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mortgage Payment</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Salary to Afford a House</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mtg Payment as % of Income</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Property Tax Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> % Crash from 2007-12</label>
-            `;
-            marketTrendsCheckboxes.innerHTML = `
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> For Sale Inventory</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Sale Inventory Growth</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Inventory Surplus/Deficit</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Price Cut %</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Days on Market</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Days on Market Growth (YoY)</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Inventory as % of Houses</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Listing Price</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Listing Price Growth (YoY)</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> New Listing Count</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> New Listing Count Growth (YoY)</label>
-            `;
-
-            enableStateEvents();
-        } else if (selectedValue === "metro") {
-            metroData = await fetchAllMetrosData(dataPoint);
-
-            // map.setLayoutProperty("state-borders-layer", "visibility", "visible");
-            map.setLayoutProperty("metro-borders-layer", "visibility", "visible");
-            map.setLayoutProperty("metro-areas-layer", "visibility", "visible");
-            investorTrendsCheckboxes.innerHTML = `
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rental Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rent for Houses</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Cap Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Vacancy Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value to Rent Ratio</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rent as % of Income</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Shadow Inventor %</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Building Permits</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Migration Total</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Migration % of Population</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rent Growth (YoY)</label>
-            `;
-            demographicsCheckboxes.innerHTML = `
-                <label><input type="checkbox" onclick="onlyOneSelect();" checked/><span></span> Population</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Household Income</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Population Growth</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Income Growth</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Remote Work %</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Homeownership Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mortgaged Home %</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Age</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Poverty Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Housing Units</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Housing Units Growth Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> College Degree Rate</label>
-            `;
-            affordabilityCheckboxes.innerHTML = `
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value Growth (YoY)</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value Growth (MoM)</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Overvalued %</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Value/Income Ratio</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mortgage Payment</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Salary to Afford a House</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mtg Payment as % of Income</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Property Tax Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Buy v Rent Differential</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> % Crash from 2007-12</label>
-            `;
-            marketTrendsCheckboxes.innerHTML = `
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> For Sale Inventory</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Sale Inventory Growth</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Inventory Surplus/Deficit</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Price Cut %</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Days on Market</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Days on Market Growth (YoY)</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Inventory as % of Houses</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Listing Price</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Listing Price Growth (YoY)</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> New Listing Count</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> New Listing Count Growth (YoY)</label>
-            `;
-            enableMetroEvents();
-        } else if (selectedValue === "county") {
-            countyData = await fetchAllCountiesData(dataPoint);
-
-            map.setLayoutProperty("state-borders-layer", "visibility", "visible");
-            map.setLayoutProperty("county-areas-layer", "visibility", "visible");
-            investorTrendsCheckboxes.innerHTML = `
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rental Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rent for Houses</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Cap Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Vacancy Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value to Rent Ratio</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rent as % of Income</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Shadow Inventor %</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Building Permits</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Migration Total</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Migration % of Population</label>
-            `;
-            demographicsCheckboxes.innerHTML = `
-                <label><input type="checkbox" onclick="onlyOneSelect();" checked/><span></span> Population</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Household Income</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Population Growth</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Income Growth</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Remote Work %</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Homeownership Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mortgaged Home %</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Age</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Poverty Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Housing Units</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Housing Units Growth Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> College Degree Rate</label>
-            `;
-            affordabilityCheckboxes.innerHTML = `
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value Growth (YoY)</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value Growth (MoM)</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Overvalued %</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Value/Income Ratio</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mortgage Payment</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Salary to Afford a House</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mtg Payment as % of Income</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Property Tax Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Buy v Rent Differential</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> % Crash from 2007-12</label>
-            `;
-            marketTrendsCheckboxes.innerHTML = `
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> For Sale Inventory</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Sale Inventory Growth</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Inventory Surplus/Deficit</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Price Cut %</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Days on Market</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Days on Market Growth (YoY)</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Inventory as % of Houses</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Listing Price</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Listing Price Growth (YoY)</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> New Listing Count</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> New Listing Count Growth (YoY)</label>
-            `;
-            enableCountyEvents();
-        } else if (selectedValue === "zipcode") {
-            zipcodeData = await fetchAllZipcodesData(dataPoint);
-
-            map.setLayoutProperty("state-borders-layer", "visibility", "visible");
-            map.setLayoutProperty("zipcode-areas-layer", "visibility", "visible");
-            investorTrendsCheckboxes.innerHTML = `
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rental Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rent for Houses</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Cap Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Vacancy Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value to Rent Ratio</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rent as % of Income</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Shadow Inventor %</label>
-            `;
-            demographicsCheckboxes.innerHTML = `
-                <label><input type="checkbox" onclick="onlyOneSelect();" checked/><span></span> Population</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Household Income</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Population Growth</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Income Growth</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Remote Work %</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Homeownership Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mortgaged Home %</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Age</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Poverty Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Housing Units</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Housing Units Growth Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> College Degree Rate</label>
-            `;
-            affordabilityCheckboxes.innerHTML = `
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value Growth (YoY)</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value Growth (MoM)</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Overvalued %</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Value/Income Ratio</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mortgage Payment</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Salary to Afford a House</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mtg Payment as % of Income</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Property Tax Rate</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Buy v Rent Differential</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> % Crash from 2007-12</label>
-            `;
-            marketTrendsCheckboxes.innerHTML = `
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> For Sale Inventory</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Sale Inventory Growth</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Inventory Surplus/Deficit</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Price Cut %</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Days on Market</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Days on Market Growth (YoY)</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Inventory as % of Houses</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Listing Price</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Listing Price Growth (YoY)</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> New Listing Count</label>
-                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> New Listing Count Growth (YoY)</label>
-            `;
-            enableZipcodeEvents();
-        }
+        selectedValue(this.value);
     });
 
     noUiSlider.create(rangeSlider, {
@@ -674,6 +519,250 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+
+async function selectChange(selectedValue) {
+    map.setLayoutProperty("state-borders-layer", "visibility", "none");
+    map.setLayoutProperty("state-areas-layer", "visibility", "none");
+    map.setLayoutProperty("metro-areas-layer", "visibility", "none");
+    map.setLayoutProperty("metro-borders-layer", "visibility", "none");
+    map.setLayoutProperty("county-areas-layer", "visibility", "none");
+    map.setLayoutProperty("zipcode-areas-layer", "visibility", "none");
+    disableStateEvents();
+    disableMetroEvents();
+    disableCountyEvents();
+    disableZipcodeEvents();
+
+    const investorTrendsCheckboxes = document.querySelector('.investor-trends');
+    const demographicsCheckboxes = document.querySelector('.demographics');
+    const affordabilityCheckboxes = document.querySelector('.affordability');
+    const marketTrendsCheckboxes = document.querySelector('.market-trends');
+
+    if (selectedValue === "state") {
+        stateData = await fetchAllStatesData(dataPoint);
+        map.setLayoutProperty("state-borders-layer", "visibility", "visible");
+        map.setLayoutProperty("state-areas-layer", "visibility", "visible");
+        investorTrendsCheckboxes.innerHTML = `
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Shadow Inventory %</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Migration Total</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Migration % of Population</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Building Permits</label>
+            `;
+        demographicsCheckboxes.innerHTML = `
+                <label><input type="checkbox" onclick="onlyOneSelect();" checked/><span></span> Population</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Household Income</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Population Growth</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Income Growth</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Remote Work %</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Homeownership Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mortgaged Home %</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Age</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Poverty Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Housing Units</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Housing Units Growth Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> College Degree Rate</label>
+            `;
+        affordabilityCheckboxes.innerHTML = `
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value Growth (YoY)</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value Growth (MoM)</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Overvalued %</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Value/Income Ratio</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mortgage Payment</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Salary to Afford a House</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mtg Payment as % of Income</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Property Tax Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> % Crash from 2007-12</label>
+            `;
+        marketTrendsCheckboxes.innerHTML = `
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> For Sale Inventory</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Sale Inventory Growth</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Inventory Surplus/Deficit</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Price Cut %</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Days on Market</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Days on Market Growth (YoY)</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Inventory as % of Houses</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Listing Price</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Listing Price Growth (YoY)</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> New Listing Count</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> New Listing Count Growth (YoY)</label>
+            `;
+
+        enableStateEvents();
+    } else if (selectedValue === "metro") {
+        metroData = await fetchAllMetrosData(dataPoint);
+
+        // map.setLayoutProperty("state-borders-layer", "visibility", "visible");
+        map.setLayoutProperty("metro-borders-layer", "visibility", "visible");
+        map.setLayoutProperty("metro-areas-layer", "visibility", "visible");
+        investorTrendsCheckboxes.innerHTML = `
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rental Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rent for Houses</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Cap Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Vacancy Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value to Rent Ratio</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rent as % of Income</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Shadow Inventor %</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Building Permits</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Migration Total</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Migration % of Population</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rent Growth (YoY)</label>
+            `;
+        demographicsCheckboxes.innerHTML = `
+                <label><input type="checkbox" onclick="onlyOneSelect();" checked/><span></span> Population</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Household Income</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Population Growth</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Income Growth</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Remote Work %</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Homeownership Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mortgaged Home %</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Age</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Poverty Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Housing Units</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Housing Units Growth Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> College Degree Rate</label>
+            `;
+        affordabilityCheckboxes.innerHTML = `
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value Growth (YoY)</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value Growth (MoM)</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Overvalued %</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Value/Income Ratio</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mortgage Payment</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Salary to Afford a House</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mtg Payment as % of Income</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Property Tax Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Buy v Rent Differential</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> % Crash from 2007-12</label>
+            `;
+        marketTrendsCheckboxes.innerHTML = `
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> For Sale Inventory</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Sale Inventory Growth</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Inventory Surplus/Deficit</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Price Cut %</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Days on Market</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Days on Market Growth (YoY)</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Inventory as % of Houses</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Listing Price</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Listing Price Growth (YoY)</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> New Listing Count</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> New Listing Count Growth (YoY)</label>
+            `;
+        enableMetroEvents();
+    } else if (selectedValue === "county") {
+        countyData = await fetchAllCountiesData(dataPoint);
+
+        map.setLayoutProperty("state-borders-layer", "visibility", "visible");
+        map.setLayoutProperty("county-areas-layer", "visibility", "visible");
+        investorTrendsCheckboxes.innerHTML = `
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rental Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rent for Houses</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Cap Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Vacancy Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value to Rent Ratio</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rent as % of Income</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Shadow Inventor %</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Building Permits</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Migration Total</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Migration % of Population</label>
+            `;
+        demographicsCheckboxes.innerHTML = `
+                <label><input type="checkbox" onclick="onlyOneSelect();" checked/><span></span> Population</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Household Income</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Population Growth</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Income Growth</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Remote Work %</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Homeownership Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mortgaged Home %</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Age</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Poverty Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Housing Units</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Housing Units Growth Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> College Degree Rate</label>
+            `;
+        affordabilityCheckboxes.innerHTML = `
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value Growth (YoY)</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value Growth (MoM)</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Overvalued %</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Value/Income Ratio</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mortgage Payment</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Salary to Afford a House</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mtg Payment as % of Income</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Property Tax Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Buy v Rent Differential</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> % Crash from 2007-12</label>
+            `;
+        marketTrendsCheckboxes.innerHTML = `
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> For Sale Inventory</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Sale Inventory Growth</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Inventory Surplus/Deficit</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Price Cut %</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Days on Market</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Days on Market Growth (YoY)</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Inventory as % of Houses</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Listing Price</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Listing Price Growth (YoY)</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> New Listing Count</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> New Listing Count Growth (YoY)</label>
+            `;
+        enableCountyEvents();
+    } else if (selectedValue === "zipcode") {
+        zipcodeData = await fetchAllZipcodesData(dataPoint);
+
+        map.setLayoutProperty("state-borders-layer", "visibility", "visible");
+        map.setLayoutProperty("zipcode-areas-layer", "visibility", "visible");
+        investorTrendsCheckboxes.innerHTML = `
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rental Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rent for Houses</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Cap Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Vacancy Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value to Rent Ratio</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Rent as % of Income</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Shadow Inventor %</label>
+            `;
+        demographicsCheckboxes.innerHTML = `
+                <label><input type="checkbox" onclick="onlyOneSelect();" checked/><span></span> Population</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Household Income</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Population Growth</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Income Growth</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Remote Work %</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Homeownership Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mortgaged Home %</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Age</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Poverty Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Housing Units</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Housing Units Growth Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> College Degree Rate</label>
+            `;
+        affordabilityCheckboxes.innerHTML = `
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value Growth (YoY)</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Home Value Growth (MoM)</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Overvalued %</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Value/Income Ratio</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mortgage Payment</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Salary to Afford a House</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Mtg Payment as % of Income</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Property Tax Rate</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Buy v Rent Differential</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> % Crash from 2007-12</label>
+            `;
+        marketTrendsCheckboxes.innerHTML = `
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> For Sale Inventory</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Sale Inventory Growth</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Inventory Surplus/Deficit</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Price Cut %</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Days on Market</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Days on Market Growth (YoY)</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Inventory as % of Houses</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Listing Price</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> Median Listing Price Growth (YoY)</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> New Listing Count</label>
+                <label><input type="checkbox" onclick="onlyOneSelect();"/><span></span> New Listing Count Growth (YoY)</label>
+            `;
+        enableZipcodeEvents();
+    }
+}
 
 const selectElement = document.querySelector("select");
 map.on('load', () => {
@@ -701,6 +790,7 @@ map.on('load', () => {
         source: 'state-borders',
         paint: {
             'fill-color': '#2A2A2A',
+            'fill-opacity': 0.1
         }
     });
     map.addLayer({
@@ -751,7 +841,7 @@ map.on('load', () => {
         source: 'metro-borders',
         paint: {
             'fill-color': '#ff0000',
-            'fill-outline-color': '#000000'
+            'fill-opacity': 0.1
         }
     });
 
@@ -761,8 +851,7 @@ map.on('load', () => {
         source: 'county-borders',
         paint: {
             'fill-color': '#00FF47',
-            'fill-opacity': 0.8,
-            'fill-outline-color': '#000000'
+            'fill-opacity': 0.1,
         }
     });
 
@@ -772,8 +861,7 @@ map.on('load', () => {
         source: 'zipcode-borders',
         paint: {
             'fill-color': '#00FF47',
-            'fill-opacity': 0.3,
-            'fill-outline-color': '#000000'
+            'fill-opacity': 0.1,
         }
     });
 
