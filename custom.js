@@ -1,5 +1,4 @@
 const host = 'https://mapbox-bubble-backend.onrender.com'
-// const host = 'http://127.0.0.1:5000'
 async function fetchOneStateYoYData(stateCode, abbreviation, dataPoint) {
     dataPoint = dataPoint.replace(/\//g, " ");
     const params = new URLSearchParams({
@@ -194,6 +193,61 @@ const map = new mapboxgl.Map({
     minZoom: 4.5,
     maxZoom: 15,
     attributionControl: false
+});
+const searchBox = document.getElementById('search-box');
+const suggestionsBox = document.getElementById('suggestions');
+let searchTimer;
+
+// Handle user input in the search box
+searchBox.addEventListener('input', function () {
+    const query = searchBox.value.trim();
+    if (query.length > 2) {
+        // Wait before sending a request (debounce)
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => fetchSuggestions(query), 300);
+    } else {
+        suggestionsBox.style.display = 'none';
+    }
+});
+
+function fetchSuggestions(query) {
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxgl.accessToken}&types=place,region,locality,poi`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const suggestions = data.features;
+            if (suggestions.length) {
+                displaySuggestions(suggestions);
+            } else {
+                suggestionsBox.style.display = 'none';
+            }
+        })
+        .catch(error => console.error('Error fetching suggestions:', error));
+}
+
+function displaySuggestions(suggestions) {
+    suggestionsBox.innerHTML = '';
+    suggestions.forEach(suggestion => {
+        const suggestionItem = document.createElement('div');
+        suggestionItem.classList.add('suggestion-item');
+        suggestionItem.textContent = suggestion.place_name;
+        suggestionItem.addEventListener('click', () => {
+            const [lng, lat] = suggestion.geometry.coordinates;
+            map.flyTo({ center: [lng, lat], zoom: 15 });
+
+            searchBox.value = suggestion.place_name;
+            suggestionsBox.style.display = 'none';
+        });
+        suggestionsBox.appendChild(suggestionItem);
+    });
+    suggestionsBox.style.display = 'block';
+}
+
+document.addEventListener('click', (event) => {
+    if (!searchBox.contains(event.target)) {
+        suggestionsBox.style.display = 'none';
+    }
 });
 
 const shortDescription = {
@@ -735,7 +789,7 @@ map.on('load', () => {
     map.on('click', 'state-areas-layer', onStateMouseClick);
 });
 
-async function onlyOneSelect() { 
+async function onlyOneSelect() {
     const checkboxes = document.querySelectorAll('.my-dropdown-menu input[type="checkbox"]');
     const e = window.event;
     checkboxes.forEach(checkbox => {

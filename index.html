@@ -4,10 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Home</title>
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet" />
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.12.0/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.12.0/mapbox-gl.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+    <script
+        src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.0/mapbox-gl-geocoder.min.js'></script>
     <!-- <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
@@ -29,7 +31,8 @@
                         fill="black" />
                 </svg>
             </div>
-            <input type="text" placeholder="Search...">
+            <input type="text" placeholder="Search..." id="search-box">
+            <div id="suggestions"></div>
             <select>
                 <option value="state">State</option>
                 <option value="metro">Metro</option>
@@ -97,7 +100,8 @@
                 Market Trends
                 <div class="my-dropdown-menu market-trends">
                     <label><input type="checkbox" onclick="onlyOneSelect();" /><span></span> For Sale Inventory</label>
-                    <label><input type="checkbox" onclick="onlyOneSelect();" /><span></span> Sale Inventory Growth</label>
+                    <label><input type="checkbox" onclick="onlyOneSelect();" /><span></span> Sale Inventory
+                        Growth</label>
                     <label><input type="checkbox" onclick="onlyOneSelect();" /><span></span> Inventory
                         Surplus/Deficit</label>
                     <label><input type="checkbox" onclick="onlyOneSelect();" /><span></span> Price Cut %</label>
@@ -146,6 +150,7 @@
                     <div class="graph-header">
                         <div class="graph-left-controls">
                             <h2 class="graph-title">Population</h2>
+                            <hr style="width: 100%;">
                             <p id="populationDescription" class="graph-description">Population size is fundamental for
                                 understanding economic scale, resource allocation, political representation, and market
                                 demand in any region.</p>
@@ -167,7 +172,6 @@
                             </div>
                         </div>
                     </div>
-
                     <canvas id="chartCanvas"></canvas>
                     <div class="slider-wrapper">
                         <div id="rangeSlider"></div>

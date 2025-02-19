@@ -1,261 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Buy vs. Rent Panels & Graph Modal with Dual-Handle Slider</title>
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- noUiSlider CSS & JS CDN (integrity attributes removed) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
-  <style>
-    /* Global Styles */
-    body {
-      margin: 0;
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-      background-color: #121212;
-      color: #e0e0e0;
-    }
-    /* Container for Panels */
-    .container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
-      padding: 20px;
-    }
-    /* Individual Panel Style */
-    .panel {
-      background-color: #1e1e1e;
-      border: 1px solid #333;
-      border-radius: 8px;
-      width: 300px;
-      height: 150px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .panel:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 8px rgba(255,255,255,0.1);
-    }
-    .panel h3 {
-      margin: 0;
-    }
-    /* Modal Overlay Styles */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.8);
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    .modal.active {
-      display: flex;
-    }
-    /* Modal Content Styles */
-    .modal-content {
-      background-color: #1e1e1e;
-      border: 1px solid #333;
-      border-radius: 8px;
-      padding: 20px;
-      width: 80%;
-      max-width: 800px;
-      position: relative;
-    }
-    .modal-content h2 {
-      margin-top: 0;
-    }
-    /* Close Button Styles */
-    .close-modal {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: none;
-      border: none;
-      color: #e0e0e0;
-      font-size: 24px;
-      cursor: pointer;
-    }
-    /* Chart Canvas */
-    canvas {
-      background-color: #1e1e1e;
-      border: 1px solid #333;
-      border-radius: 4px;
-      margin-top: 20px;
-    }
-    /* Slider Container */
-    .slider-wrapper {
-      margin-top: 20px;
-      padding: 0 10px;
-    }
-    .slider-labels {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.9em;
-      margin-top: 5px;
-    }
-    /* Custom styles for noUiSlider handles & tooltips */
-    .noUi-handle {
-      border: none;
-      background-color: #4caf50;
-    }
-    .noUi-connect {
-      background: #4caf50;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapbox Custom Search Box</title>
+    
+    <!-- Link to Mapbox GL JS CSS for map styling -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.css" rel="stylesheet">
+    
+    <!-- Styling for search box -->
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { height: 100vh; width: 100%; }
+        #customSearchBox {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            width: 80%;
+            max-width: 400px;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        #suggestions {
+            position: absolute;
+            top: 45px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 11;
+            width: 80%;
+            max-width: 400px;
+            background-color: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+        .suggestion-item {
+            padding: 10px;
+            cursor: pointer;
+        }
+        .suggestion-item:hover {
+            background-color: #f1f1f1;
+        }
+    </style>
 </head>
 <body>
-  <!-- Panels Container -->
-  <div class="container">
-    <div class="panel" data-panel="1"><h3>Panel 1</h3></div>
-    <div class="panel" data-panel="2"><h3>Panel 2</h3></div>
-    <div class="panel" data-panel="3"><h3>Panel 3</h3></div>
-    <div class="panel" data-panel="4"><h3>Panel 4</h3></div>
-    <div class="panel" data-panel="5"><h3>Panel 5</h3></div>
-    <div class="panel" data-panel="6"><h3>Panel 6</h3></div>
-  </div>
 
-  <!-- Modal for the Graph -->
-  <div class="modal" id="graphModal">
-    <div class="modal-content">
-      <button class="close-modal" id="closeModal">&times;</button>
-      <h2>Graph Data for Panel <span id="panelNumber"></span></h2>
-      <canvas id="chartCanvas" width="800" height="400"></canvas>
-      <!-- Dual-handle slider for selecting the data range -->
-      <div class="slider-wrapper">
-        <div id="rangeSlider"></div>
-        <div class="slider-labels">
-          <span id="minLabel">1</span>
-          <span id="maxLabel">12</span>
-        </div>
-      </div>
-    </div>
-  </div>
+    <!-- Custom Search input box -->
+    <input id="customSearchBox" type="text" placeholder="Search for a location..." autocomplete="off">
 
-  <script>
-    // Dummy data: 12 months labels and corresponding data points
-    const fullLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const fullData = [12, 19, 3, 5, 2, 3, 10, 15, 8, 12, 6, 9];
+    <!-- Suggestions dropdown -->
+    <div id="suggestions"></div>
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const panels = document.querySelectorAll('.panel');
-      const modal = document.getElementById('graphModal');
-      const closeModal = document.getElementById('closeModal');
-      const panelNumberSpan = document.getElementById('panelNumber');
-      const minLabel = document.getElementById('minLabel');
-      const maxLabel = document.getElementById('maxLabel');
-      const ctx = document.getElementById('chartCanvas').getContext('2d');
-      let chartInstance = null;
+    <!-- Map container -->
+    <div id="map"></div>
 
-      // Initialize noUiSlider with dual handles
-      const rangeSlider = document.getElementById('rangeSlider');
-      noUiSlider.create(rangeSlider, {
-        start: [1, 12],
-        connect: true,
-        step: 1,
-        range: {
-          min: 1,
-          max: 12
-        },
-        tooltips: [true, true],
-        format: {
-          to: value => Math.round(value),
-          from: value => Number(value)
-        }
-      });
+    <!-- Include Mapbox GL JS -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.js"></script>
+    <!-- Include Mapbox Geocoder Plugin -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.10.0/plugins/mapbox-gl-geocoder/v4.7.0/mapbox-gl-geocoder.min.js"></script>
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v2.10.0/plugins/mapbox-gl-geocoder/v4.7.0/mapbox-gl-geocoder.css" type="text/css">
 
-      // Function to update the chart with a new range
-      function updateChart(rangeValues) {
-        const [minValue, maxValue] = rangeValues.map(val => parseInt(val, 10));
-        // Slice the labels and data arrays based on the selected range.
-        // Note: Adjusting indices because our months array is 0-indexed.
-        const newLabels = fullLabels.slice(minValue - 1, maxValue);
-        const newData = fullData.slice(minValue - 1, maxValue);
-        if (chartInstance) {
-          chartInstance.data.labels = newLabels;
-          chartInstance.data.datasets[0].data = newData;
-          chartInstance.update();
-        }
-        // Update slider label display
-        minLabel.textContent = minValue;
-        maxLabel.textContent = maxValue;
-      }
+    <script>
+        // Replace with your Mapbox API Key
+        mapboxgl.accessToken = 'pk.eyJ1IjoiZ2ljb2RlcmdhbCIsImEiOiJjazcxODNscXYwM3R3M2V0aGcwMWxvcWV0In0.s246-Q7mSmCOOeqwP-HGtA';
 
-      // Update chart when the slider values change
-      rangeSlider.noUiSlider.on('update', (values) => {
-        updateChart(values);
-      });
+        // Initialize the map
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v11',
+            center: [-74.5, 40], // Default center coordinates (New York City)
+            zoom: 9
+        });
 
-      // Panel click events
-      panels.forEach(panel => {
-        panel.addEventListener('click', () => {
-          const panelNum = panel.getAttribute('data-panel');
-          panelNumberSpan.textContent = panelNum;
-          // Hide the clicked panel
-          panel.style.display = 'none';
-          // Show the modal
-          modal.classList.add('active');
+        // Variables
+        const searchBox = document.getElementById('customSearchBox');
+        const suggestionsBox = document.getElementById('suggestions');
+        let searchTimer;
 
-          // Reset slider to full range
-          rangeSlider.noUiSlider.set([1, 12]);
-
-          // Create (or recreate) the Chart.js line graph with the full data range
-          if (chartInstance) {
-            chartInstance.destroy();
-          }
-          chartInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-              labels: fullLabels,
-              datasets: [{
-                label: 'Monthly Data for Panel ' + panelNum,
-                data: fullData,
-                borderColor: '#4caf50',
-                backgroundColor: 'rgba(76, 175, 80, 0.2)',
-                fill: true,
-                tension: 0.4
-              }]
-            },
-            options: {
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  ticks: { color: '#e0e0e0' },
-                  grid: { color: '#333' }
-                },
-                x: {
-                  ticks: { color: '#e0e0e0' },
-                  grid: { color: '#333' }
-                }
-              },
-              plugins: {
-                legend: {
-                  labels: { color: '#e0e0e0' }
-                }
-              }
+        // Handle user input in the search box
+        searchBox.addEventListener('input', function() {
+            const query = searchBox.value.trim();
+            if (query.length > 2) {
+                // Wait before sending a request (debounce)
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(() => fetchSuggestions(query), 300);
+            } else {
+                suggestionsBox.style.display = 'none';
             }
-          });
         });
-      });
 
-      // Close modal button event
-      closeModal.addEventListener('click', () => {
-        modal.classList.remove('active');
-        // Reset panels visibility
-        panels.forEach(panel => {
-          panel.style.display = 'flex';
+        // Fetch location suggestions from Mapbox Geocoding API
+        function fetchSuggestions(query) {
+            const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxgl.accessToken}&types=place,region,locality,poi`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const suggestions = data.features;
+                    if (suggestions.length) {
+                        displaySuggestions(suggestions);
+                    } else {
+                        suggestionsBox.style.display = 'none';
+                    }
+                })
+                .catch(error => console.error('Error fetching suggestions:', error));
+        }
+
+        // Display fetched suggestions below the search box
+        function displaySuggestions(suggestions) {
+            suggestionsBox.innerHTML = '';
+            suggestions.forEach(suggestion => {
+                const suggestionItem = document.createElement('div');
+                suggestionItem.classList.add('suggestion-item');
+                suggestionItem.textContent = suggestion.place_name;
+                suggestionItem.addEventListener('click', () => {
+                    // Center the map on the selected suggestion
+                    const [lng, lat] = suggestion.geometry.coordinates;
+                    map.flyTo({ center: [lng, lat], zoom: 15 });
+
+                    // Hide suggestions and populate the search box with the selected suggestion
+                    searchBox.value = suggestion.place_name;
+                    suggestionsBox.style.display = 'none';
+                });
+                suggestionsBox.appendChild(suggestionItem);
+            });
+            suggestionsBox.style.display = 'block';
+        }
+
+        // Close the suggestions dropdown if the user clicks outside the search box
+        document.addEventListener('click', (event) => {
+            if (!searchBox.contains(event.target)) {
+                suggestionsBox.style.display = 'none';
+            }
         });
-      });
-    });
-  </script>
+
+    </script>
 </body>
 </html>
