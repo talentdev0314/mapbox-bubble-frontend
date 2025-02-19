@@ -18,7 +18,7 @@ async function fetchOneStateYoYData(stateCode, abbreviation, dataPoint) {
         console.error('Error fetching data:', error);
     }
 }
-
+ 
 async function fetchOneStateMoMData(stateCode, abbreviation, dataPoint) {
     dataPoint = dataPoint.replace(/\//g, " ");
     const params = new URLSearchParams({
