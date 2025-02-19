@@ -502,7 +502,7 @@ function disableZipcodeEvents() {
 document.addEventListener("DOMContentLoaded", function () {
     const selectElement = document.querySelector("select");
     selectElement.addEventListener("change", async function () {
-        selectedValue(this.value);
+        selectChange(this.value);
     });
 
     noUiSlider.create(rangeSlider, {
