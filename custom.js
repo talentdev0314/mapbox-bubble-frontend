@@ -173,6 +173,25 @@ async function fetchAllCountiesData(dataPoint) {
     }
 }
 
+async function fetchAllZipcodesData(dataPoint) {
+    return [];
+    // dataPoint = dataPoint.replace(/\//g, " ");
+    // const params = new URLSearchParams({
+    //     dataPoint: dataPoint
+    // }).toString();
+    // const url = `${host}/api/all-counties?${params}`;
+    // try {
+    //     const response = await fetch(url);
+    //     if (!response.ok) {
+    //         throw new Error(`HTTP error! Status: ${response.status}`);
+    //     }
+    //     const data = await response.json();
+    //     return data;
+    // } catch (error) {
+    //     console.error('Error fetching data:', error);
+    // }
+}
+
 function getCheckedItems() {
     let checkedItems = [];
     document.querySelectorAll(".menu-container input[type='checkbox']:checked").forEach(checkbox => {
