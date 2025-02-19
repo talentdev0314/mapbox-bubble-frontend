@@ -292,9 +292,9 @@ const longDescription = {
     "New Listing Count Growth (YoY)": "This metric helps forecast market supply dynamics, crucial for predicting future market conditions."
 }
 
+
 map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 const statesBoundariesUrl = 'https://raw.githubusercontent.com/jgoodall/us-maps/master/geojson/state.geo.json';
-// const statesBoundariesUrl = 'https://raw.githubusercontent.com/ndrezn/zip-code-geojson/refs/heads/main/usa_zip_codes_geo_100m.json';
 const metroBoundariesUrl = 'https://raw.githubusercontent.com/loganpowell/census-geojson/refs/heads/master/GeoJSON/20m/2017/metropolitan-statistical-area!micropolitan-statistical-area.json';
 const countiesBoundariesUrl = 'https://raw.githubusercontent.com/joelwolfgang/GEOJson-US-Counties/master/usCounties.geojson';
 const zipcodeBoundariesUrl = 'https://raw.githubusercontent.com/ndrezn/zip-code-geojson/refs/heads/main/usa_zip_codes_geo_100m.json';

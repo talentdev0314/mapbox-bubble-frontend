@@ -1,0 +1,417 @@
+{
+  "Home Value": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "$",
+      "suffix": "K",
+      "fixed": 1
+    },
+    "additional-data": []
+  },
+  "Home Value Growth (YoY)": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 1
+    },
+    "additional-data": ["Last Year", "Current Year"]
+  },
+  "Overvalued %": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 1
+    },
+    "additional-data": ["Typical Home Price", "Fair Home Value"]
+  },
+  "Value/Income Ratio": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "",
+      "fixed": 2
+    },
+    "additional-data": ["Home Value", "Median HH. Income"]
+  },
+  "Mortgage Payment": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "$",
+      "suffix": "",
+      "fixed": 0
+    },
+    "additional-data": ["Home Value", "Median HH. Income"]
+  },
+  "Salary to Afford a house": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "$",
+      "suffix": "",
+      "fixed": 0
+    },
+    "additional-data": [
+      "Mortage Payment (Monthly)",
+      "Mortage Payment (Monthly)"
+    ]
+  },
+  "Mtg Payment as % of income": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 2
+    },
+    "additional-data": [
+      "Yearly House Payment",
+      "Median HH. Income",
+      "Mortgage Rate"
+    ]
+  },
+  "Property Tax Rate": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 2
+    },
+    "additional-data": []
+  },
+  "% Crash from 2007-12": {
+    "yearly-only": true,
+    "format": {
+      "prefix": "$",
+      "suffix": "K",
+      "fixed": 1
+    },
+    "additional-data": []
+  },
+  "Home Value Growth (MoM)": {
+    "yearly-only": true,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 2
+    },
+    "additional-data": []
+  },
+  "For Sale Inventory": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "",
+      "fixed": 0
+    },
+    "additional-data": []
+  },
+  "Sale Inventory Growth (YoY)": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 1
+    },
+    "additional-data": ["Last Year", "Current Year"]
+  },
+  "Inventory Surplus/Deficit": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 1
+    },
+    "additional-data": ["For Sale Inventory", "Long Term Average"]
+  },
+  "Price Cut %": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 1
+    },
+    "additional-data": ["Listings with price cut", "Total Inventory"]
+  },
+  "Days on Market": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "",
+      "fixed": 0
+    },
+    "additional-data": []
+  },
+  "Days on Market Growth (YoY)": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 1
+    },
+    "additional-data": ["Last Year", "Current Year"]
+  },
+  "Inventory as % of Houses": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 1
+    },
+    "additional-data": [
+      "Total Active Inventory",
+      "Absentee Owned + Ownership HH's"
+    ]
+  },
+  "Median Listing Price": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "$",
+      "suffix": "",
+      "fixed": 0
+    },
+    "additional-data": []
+  },
+  "Median Listing Price (YoY)": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 2
+    },
+    "additional-data": ["Last Year", "Current Year"]
+  },
+  "New Listing Count": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "",
+      "fixed": 0
+    },
+    "additional-data": []
+  },
+  "New Listing Count (YoY)": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 2
+    },
+    "additional-data": ["Last Year", "Current Year"]
+  },
+  "Sale Inventory Growth (MoM)": {
+    "yearly-only": true,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 1
+    },
+    "additional-data": ["Current Year"]
+  },
+  "Population": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "K",
+      "fixed": 1
+    },
+    "additional-data": []
+  },
+  "Median Household Income": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "$",
+      "suffix": "K",
+      "fixed": 1
+    },
+    "additional-data": []
+  },
+  "Population Growth": {
+    "yearly-only": true,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 1
+    },
+    "additional-data": ["Last Year", "Current Year"]
+  },
+  "Income Growth": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 1
+    },
+    "additional-data": ["Last Year", "Current Year"]
+  },
+  "Remote Work %": {
+    "yearly-only": true,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 1
+    },
+    "additional-data": ["Work From Home", "Total Employment"]
+  },
+  "College Degree Rate": {
+    "yearly-only": true,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 1
+    },
+    "additional-data": ["Population with Bachelor's or Higher", "25+ Age Population"]
+  },
+  "Homeownership Rate": {
+    "yearly-only": true,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 1
+    },
+    "additional-data": ["Ownership HH's", "Total Households"]
+  },
+  "Mortgaged Home %": {
+    "yearly-only": true,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 2
+    },
+    "additional-data": ["Mortgaged Homes", "Ownership HH's"]
+  },
+  "Median Age": {
+    "yearly-only": true,
+    "format": {
+      "prefix": "",
+      "suffix": "",
+      "fixed": 1
+    },
+    "additional-data": []
+  },
+  "Poverty Rate": {
+    "yearly-only": true,
+    "format": {
+      "prefix": "",
+      "suffix": "",
+      "fixed": 1
+    },
+    "additional-data": ["Population Living in Poverty", "Population"]
+  },
+  "Housing Units": {
+    "yearly-only": true,
+    "format": {
+      "prefix": "",
+      "suffix": "K",
+      "fixed": 1
+    },
+    "additional-data": []
+  },
+  "Housing Unit Growth Rate": {
+    "yearly-only": true,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 2
+    },
+    "additional-data": ["Last Year", "Current Year"]
+  },
+  "Building Permits": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "",
+      "fixed": 0
+    },
+    "additional-data": []
+  },
+  "Rental Rate": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "$",
+      "suffix": "",
+      "fixed": 0
+    },
+    "additional-data": []
+  },
+  "Rental For Houses": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "$",
+      "suffix": "",
+      "fixed": 0
+    },
+    "additional-data": []
+  },
+  "Cap Rate": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "%",
+      "suffix": "",
+      "fixed": 1
+    },
+    "additional-data": ["Gross Rent Income", "Expenses", "Net Rent Income", "Typical Home Price"]
+  },
+  "Vacancy Rate": {
+    "yearly-only": true,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 2
+    },
+    "additional-data": ["Housing Units", "Vacancy Units"]
+  },
+  "Home Value to Rent Ratio": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "",
+      "fixed": 2
+    },
+    "additional-data": ["Home Values", "Annual Rent for Houses"]
+  },
+  "Rent as % of Income": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 2
+    },
+    "additional-data": ["Yearly Apartment Rent", "Med. HH. Income"]
+  },
+  "Shadow Inventory %": {
+    "yearly-only": true,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 2
+    },
+    "additional-data": ["Absentee Owned Units", "Absentee Owned + Ownership HH's"]
+  },
+  "Migration Total": {
+    "yearly-only": true,
+    "format": {
+      "prefix": "",
+      "suffix": "K",
+      "fixed": 1
+    },
+    "additional-data": []
+  },
+  "Migration % of Population": {
+    "yearly-only": true,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 1
+    },
+    "additional-data": ["Migration Total", "Population"]
+  },
+  "Rent Growth (YoY)": {
+    "yearly-only": false,
+    "format": {
+      "prefix": "",
+      "suffix": "%",
+      "fixed": 2
+    },
+    "additional-data": ["Last Year", "Current Year"]
+  }
+}
