@@ -731,9 +731,7 @@ canvas {
   display: flex;
   flex-direction: column;
   margin-right: 10px;
-  border: 2px solid white;
   padding: 8px;
-  border-radius: 8px;
 }
 
 .graph-controls {
