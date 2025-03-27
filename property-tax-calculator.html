@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.0/mapbox-gl-geocoder.min.js'></script>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Tax Calculator</title>
+    <style>
+        html {
+            font-family: "Open Sans", sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 20px;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        .input-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .input-group div:not(#slider-wrapper) {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .input-group input[type="text"],
+        .input-group input[type="range"] {
+            padding: 10px;
+        }
+
+        .input-group input[type="range"] {
+            -webkit-appearance: none;
+            height: 10px;
+            background: #ddd;
+        }
+
+        .input-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #0073e6;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .tax-info {
+            display: flex;
+            justify-content: space-between;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .tax-info div {
+            flex: 1;
+        }
+
+        .tax-info h3 {
+            margin: 5px 0;
+            color: #0073e6;
+            font-size: 2em;
+        }
+
+        .comparison {
+            margin-top: 20px;
+        }
+
+        .bar {
+            height: 10px;
+            background-color: #0073e6;
+            width: 300px;
+        }
+
+        .comparison-item {
+            margin-bottom: 20px;
+        }
+
+        .comparison-item h4 {
+            margin: 5px 0;
+        }
+
+        #suggestions {
+            position: relative;
+            width: 100%;
+            background-color: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .suggestion-item:hover {
+            background-color: #f1f1f1;
+        }
+
+        .current-location {
+            font-weight: bold;
+            color: red;
+        }
+
+        #loading {
+            position: absolute;
+            margin-top: 20px;
+            font-size: 20px;
+            display: none;
+            text-align: center;
+            color: blue;
+            justify-self: anchor-center;
+        }
+
+        #slider-value {
+            text-align: center;
+            font-size: 20px;
+            margin-top: 10px;
+        }
+
+        #slider-wrapper {
+            margin-top: 10px;
+        }
+
+        .noUi-handle {
+            border: none !important;
+            background-color: #000000 !important;
+            border-radius: 50% !important;
+        }
+
+        .noUi-connect {
+            background: linear-gradient(to right, rgb(252, 210, 151) 0%, rgb(234, 84, 139) 25%, rgb(136, 47, 173) 50%, rgb(44, 66, 222) 75%, rgb(17, 178, 247) 100%) !important;
+        }
+
+        .noUi-handle:after,
+        .noUi-handle:before {
+            content: none !important;
+        }
+
+        .noUi-horizontal {
+            height: 10px !important;
+        }
+
+        .noUi-horizontal .noUi-handle {
+            width: 18px !important;
+            height: 18px !important;
+            right: -9px !important;
+            top: -5px !important;
+        }
+    </style>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.12.0/mapbox-gl.js"></script>
+    <script
+        src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.0/mapbox-gl-geocoder.min.js'></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
+</head>
+
+<body>
+    <div id="loading">Loading data, please wait...</div>
+    <div class="container">
+        <h2>Property Tax Calculator</h2>
+        <div class="input-group">
+            <div style="background: #f9f9f9; padding: 15px; max-width: 60%;" class="search-container">
+                <label>Enter Your Location</label>
+                <input type="text" placeholder="Enter Your Location" id="search-box" value="Phenix, VA">
+                <div id="suggestions">
+                    <div class="suggestion-item current-location" id="currentLocation">
+                        📍 Use my current location
+                    </div>
+                </div>
+            </div>
+            <div style="background: #f9f9f9; padding: 15px; max-width: 40%;">
+                <label>Assessed Home Value</label>
+                <input type="text" placeholder="Assessed Home Value" value="500000" id="assessed-home-value">
+                <div id="slider-wrapper">
+                    <div id="rangeSlider"></div>
+                </div>
+            </div>
+        </div>
+        <div class="tax-info" style="width: 80%; justify-self: center">
+            <div>
+                <p><strong>Average County Tax Rate</strong> <span title="Tax rate information">ℹ</span></p>
+                <h3 class="average-county-tax-rate">0.758%</h3>
+                <p>(<span class="county-name">Panola County</span>)</p>
+            </div>
+            <div>
+                <p><strong>Property Taxes</strong></p>
+                <h3 class="property-taxes">$75,800</h3>
+                <p>(Annual)</p>
+            </div>
+        </div>
+        <div class="comparison" style="width: 80%; justify-self: center">
+            <h3>How Your Property Taxes Compare</h3>
+            <p>Based on an Assessed Home Value of <strong><span class="property-value">$10,000,000</strong></span></p>
+            <div class="comparison-item">
+                <h4 class="county-name">Panola County</h4>
+                <div style="display: flex;">
+                    <p style="margin-right: 20px" class="county-property-tax">$75,800</p>
+                    <div style="width: 300px;">
+                        <div class="bar county-pct-bar"></div>
+                        <p><span class="county-pct">0.758</span>% of Assessed Home Value</p>
+                    </div>
+                </div>
+                <hr>
+            </div>
+            <div class="comparison-item">
+                <h4 class="state-name"></h4>
+                <div style="display: flex;">
+                    <p style="margin-right: 20px" class="state-property-tax">$75,800</p>
+                    <div style="width: 300px;">
+                        <div class="bar state-pct-bar"></div>
+                        <p><span class="state-pct">0.758</span>% of Assessed Home Value</p>
+                    </div>
+                </div>
+                <hr>
+            </div>
+            <div class="comparison-item">
+                <h4>National</h4>
+                <div style="display: flex;">
+                    <p style="margin-right: 20px" class="nation-property-tax">$75,800</p>
+                    <div style="width: 300px;">
+                        <div class="bar nation-pct-bar"></div>
+                        <p><span class="nation-pct">0.758</span>% of Assessed Home Value</p>
+                    </div>
+                </div>
+                <hr>
+            </div>
+        </div>
+    </div>
+    <script>
+        const rangeSlider = document.getElementById('rangeSlider');
+        const output = document.getElementById('slider-output');
+        let county, state, countyPct, statePct, nationPct;
+        const predefinedValues = [
+            10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000,
+            55000, 60000, 65000, 70000, 75000, 80000, 85000, 90000, 95000,
+            100000, 150000, 200000, 250000, 300000, 350000, 400000, 450000, 500000,
+            550000, 600000, 650000, 700000, 750000, 800000, 850000, 900000, 950000,
+            1000000, 1500000, 2000000, 2500000, 3000000, 3500000, 4000000, 4500000, 5000000,
+            5500000, 6000000, 6500000, 7000000, 7500000, 8000000, 8500000, 9000000, 9500000,
+            10000000
+        ];
+        let sliderValue = predefinedValues[500000];
+        noUiSlider.create(rangeSlider, {
+            start: [500000],
+            connect: [true, false],
+            range: {
+                min: 0,
+                max: predefinedValues.length - 1
+            },
+            step: 1,
+            format: {
+                to: index => predefinedValues[Math.round(index)],
+                from: value => predefinedValues.indexOf(Number(value))
+            }
+        });
+
+        rangeSlider.noUiSlider.on('update', (values) => {
+            displayData(values);
+        });
+
+        mapboxgl.accessToken = 'pk.eyJ1IjoiZ2ljb2RlcmdhbCIsImEiOiJjazcxODNscXYwM3R3M2V0aGcwMWxvcWV0In0.s246-Q7mSmCOOeqwP-HGtA';
+        const jsonUrl = 'https://raw.githubusercontent.com/talentdev0314/mapbox-bubble-backend/refs/heads/main/county_fips.json';
+        let county2FipsJSON = null;
+        let stateFipsCode = null;
+        let countyFipsCode = null;
+        fetch(jsonUrl)
+            .then(response => response.json())
+            .then(data => {
+                county2FipsJSON = data;
+            })
+            .catch(error => console.error('Error fetching county FIPS:', error));
+
+        const searchBox = document.getElementById('search-box');
+        const suggestionsBox = document.getElementById('suggestions');
+        let searchTimer;
+        searchBox.addEventListener('input', function () {
+            const query = searchBox.value.trim();
+            if (query.length > 2) {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(() => fetchSuggestions(query), 300);
+            } else {
+                suggestionsBox.style.display = 'none';
+            }
+        });
+
+        async function fetchSuggestions(query) {
+            if (query.length < 2) {
+                document.getElementById('suggestions').style.display = 'none';
+                return;
+            }
+            const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxgl.accessToken}&types=place,locality,postcode&country=us`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const suggestions = data.features;
+                    if (suggestions.length) {
+                        displaySuggestions(suggestions);
+                    } else {
+                        suggestionsBox.style.display = 'none';
+                    }
+                })
+                .catch(error => console.error('Error fetching suggestions:', error));
+        }
+
+        function displaySuggestions(suggestions) {
+            suggestionsBox.innerHTML = '';
+
+            const locationOption = document.createElement('div');
+            locationOption.classList.add('suggestion-item', 'current-location');
+            locationOption.textContent = '📍 Use my current location';
+            locationOption.addEventListener('click', () => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(position => {
+                        const { latitude, longitude } = position.coords;
+                        fetchReverseGeocode(latitude, longitude);
+                    }, error => {
+                        alert("Location access denied or unavailable.");
+                    });
+                } else {
+                    alert("Geolocation is not supported by this browser.");
+                }
+            });
+            suggestionsBox.appendChild(locationOption);
+
+            suggestions.forEach(suggestion => {
+                const suggestionItem = document.createElement('div');
+                suggestionItem.classList.add('suggestion-item');
+                suggestionItem.textContent = suggestion.place_name;
+                suggestionItem.addEventListener('click', () => {
+                    for (let i = 0; i < suggestion.context.length; i++) {
+                        if (suggestion.context[i].id.includes('district')) {
+                            county = suggestion.context[i].text;
+                            console.log(county)
+                        }
+                        if (suggestion.context[i].id.includes('region')) {
+                            state = suggestion.context[i].text;
+                        }
+                    }
+                    let stateFipsCode = county2FipsJSON[state]["fipscode"];
+                    let countyFipsCode = county2FipsJSON[state]["counties"][county];
+
+                    const loadingElement = document.getElementById("loading");
+                    loadingElement.style.display = "block";
+
+                    const nationUrl = 'https://api.census.gov/data/2023/acs/acs1?for=us:1&key=83e384a00001c1bfd012b612302bd069ac8b7b48&get=NAME,B25103_001E,B25077_001E';
+                    const stateUrl = `https://api.census.gov/data/2022/acs/acs5?for=state:${stateFipsCode}&key=83e384a00001c1bfd012b612302bd069ac8b7b48&get=NAME,B25103_001E,B25077_001E`;
+                    const countyUrl = `https://api.census.gov/data/2022/acs/acs5?in=state:${stateFipsCode}&for=county:${countyFipsCode}&key=83e384a00001c1bfd012b612302bd069ac8b7b48&get=NAME,B25103_001E,B25077_001E`;
+
+                    const fetchData = (url) => fetch(url).then(response => response.json());
+
+                    Promise.all([fetchData(nationUrl), fetchData(stateUrl), fetchData(countyUrl)])
+                        .then(([nationData, stateData, countyData]) => {
+                            nationPct = Math.round(nationData[1][1] / nationData[1][2] * 100000) / 1000;
+                            statePct = Math.round(stateData[1][1] / stateData[1][2] * 100000) / 1000;
+                            countyPct = Math.round(countyData[1][1] / countyData[1][2] * 100000) / 1000;
+                            displayData([sliderValue]);
+                            loadingElement.style.display = "none";
+                            searchBox.value = suggestion.place_name;
+                            suggestionsBox.style.display = 'none';
+                        })
+                        .catch(error => console.error("Error getting location:", error));
+                });
+                suggestionsBox.appendChild(suggestionItem);
+            });
+            suggestionsBox.style.display = 'block';
+        }
+
+        document.getElementById('search-box').addEventListener('focus', () => {
+            document.getElementById('suggestions').style.display = 'block';
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!document.querySelector('.search-container').contains(event.target)) {
+                document.getElementById('suggestions').style.display = 'none';
+            }
+        });
+
+        document.getElementById('currentLocation').addEventListener('click', () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const { latitude, longitude } = position.coords;
+                    fetchReverseGeocode(latitude, longitude);
+                }, error => {
+                    alert("Location access denied or unavailable.");
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        });
+
+        function fetchReverseGeocode(lat, lng) {
+            const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxgl.accessToken}`;
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    let place;
+                    for (let i = 0; i < data.features.length; i++) {
+                        if (data.features[i].id.includes('district')) {
+                            county = data.features[i].text.split(', ')[0];
+                        }
+                        if (data.features[i].id.includes('region')) {
+                            state = data.features[i].text.split(', ')[0];
+                        }
+                        if (data.features[i].id.includes('postcode')) {
+                            place = data.features[i].place_name;
+                        }
+                    }
+                    let stateFipsCode = county2FipsJSON[state]["fipscode"];
+                    let countyFipsCode = county2FipsJSON[state]["counties"][county];
+                    
+                    const loadingElement = document.getElementById("loading");
+                    loadingElement.style.display = "block";
+                    
+                    const nationUrl = 'https://api.census.gov/data/2023/acs/acs1?for=us:1&key=83e384a00001c1bfd012b612302bd069ac8b7b48&get=NAME,B25103_001E,B25077_001E';
+                    const stateUrl = `https://api.census.gov/data/2022/acs/acs5?for=state:${stateFipsCode}&key=83e384a00001c1bfd012b612302bd069ac8b7b48&get=NAME,B25103_001E,B25077_001E`;
+                    const countyUrl = `https://api.census.gov/data/2022/acs/acs5?in=state:${stateFipsCode}&for=county:${countyFipsCode}&key=83e384a00001c1bfd012b612302bd069ac8b7b48&get=NAME,B25103_001E,B25077_001E`;
+                    
+                    const fetchData = (url) => fetch(url).then(response => response.json());
+                    
+                    Promise.all([fetchData(nationUrl), fetchData(stateUrl), fetchData(countyUrl)])
+                    .then(([nationData, stateData, countyData]) => {
+                            nationPct = Math.round(nationData[1][1] / nationData[1][2] * 100000) / 1000;
+                            statePct = Math.round(stateData[1][1] / stateData[1][2] * 100000) / 1000;
+                            countyPct = Math.round(countyData[1][1] / countyData[1][2] * 100000) / 1000;
+                            displayData([sliderValue]);
+                            loadingElement.style.display = "none";
+                            suggestionsBox.style.display = 'none';
+                        })
+                        .catch(error => console.error("Error getting location:", error));
+
+                    document.getElementById('search-box').value = place;
+                    document.getElementById('suggestions').style.display = 'none';
+                })
+                .catch(error => console.error("Error getting location:", error));
+        }
+
+        function displayData(values) {
+            let maxPct = Math.max(countyPct, statePct, nationPct);
+            document.getElementById('assessed-home-value').value = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(values[0]);
+            document.querySelector('.property-value').textContent = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(values[0]);
+            sliderValue = values[0];
+            document.querySelector('div.county-pct-bar').style.width = `${countyPct / maxPct * 100}%`;
+            document.querySelector('div.state-pct-bar').style.width = `${statePct / maxPct * 100}%`;
+            document.querySelector('div.nation-pct-bar').style.width = `${nationPct / maxPct * 100}%`;
+            document.querySelector('.county-pct').textContent = countyPct;
+            document.querySelector('.state-pct').textContent = statePct;
+            document.querySelector('.nation-pct').textContent = nationPct;
+            document.querySelector('.county-property-tax').innerHTML = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(countyPct * sliderValue / 100);
+            document.querySelector('.state-property-tax').innerHTML = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(statePct * sliderValue / 100);
+            document.querySelector('.nation-property-tax').innerHTML = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(nationPct * sliderValue / 100);
+            document.querySelectorAll('.county-name').forEach(el => el.textContent = county);
+            document.querySelector('.state-name').textContent = state;
+
+            document.querySelector('.average-county-tax-rate').textContent = `${countyPct}%`;
+            document.querySelector('.property-taxes').textContent = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(countyPct * sliderValue / 100);
+        }
+    </script>
+</body>
+
+</html>
